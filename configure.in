@@ -21,7 +21,7 @@ AC_SUBST(glade_LIBS)
 
 
 # XXX circular dependencies
-AC_SUBST(LIBS, "`lti-config nogtk --libs` -lpthread -lm -lsearchlet -lfilterexec -lfilter -llog -lodisk -ltools -lhstub -ldctl -ldconfig -llog -lssl")
+AC_SUBST(LIBS, "`lti-config nogtk --libs` -lpthread -lm -lsearchlet -lfilterexec -lfilter -llog -lodisk -ltools -lhstub -ldctl -ldconfig -llog -lssl -lauth")
 
 
 # XXX should use pkg-config
@@ -51,6 +51,8 @@ AC_CHECK_LIB([log], [main], ,
         [AC_MSG_ERROR(Missing liblog)])
 AC_CHECK_LIB([tools], [main], ,
         [AC_MSG_ERROR(Missing libtools)])
+AC_CHECK_LIB([auth], [main], ,
+        [AC_MSG_ERROR(Missing libauth)])
 
 
 

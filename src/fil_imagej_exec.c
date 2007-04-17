@@ -93,11 +93,13 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    char buf[1024];
    int h_errno;
    if (gethostbyname2_r("ijvm", AF_INET, &host, buf, 1024, &result, &h_errno) < 0) {
+      perror("gethost");
       *filter_args = NULL;
    } else {
        struct sockaddr_in *addr = (struct sockaddr_in *)(result->h_addr_list[0]);
        addr->sin_port = htons(PORT);
        if (connect(ij_socket, (struct sockaddr *)addr, result->h_length) < 0) {
+         perror("connect");
          *filter_args = NULL;
        } else {
          struct filter_instance *inst = 

@@ -90,10 +90,8 @@ public class Diamond_Filter implements PlugIn {
 			this.dispose();
 			
 			if (e.getActionCommand().equals("OK")) {
-				if (Recorder.record) {
-					Recorder.recordOption(MACRO_FIELD_NAME, 
-							exprArea.getText());
-				}
+				Recorder.recordOption(MACRO_FIELD_NAME, 
+						exprArea.getText());
 				result = evaluate(exprArea.getText());
 				cancelled = false;
 			} else {

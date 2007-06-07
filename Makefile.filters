@@ -1,4 +1,4 @@
 IMAGEJ_EXE_PATH=/opt/ij
 
 data/filter/fil_imagej_exec.so: src/fil_imagej_exec.c
-	gcc -fPIC -I/opt/diamond/include -I/usr/local/diamond/include -O2 -g -m32 -Wall -shared  -o $@ src/fil_imagej_exec.c -DIMAGEJ_EXE_PATH=\"${IMAGEJ_EXE_PATH}\"
+	gcc -fPIC `pkg-config opendiamond --cflags` -O2 -g -m32 -Wall -shared  -o $@ src/fil_imagej_exec.c -DIMAGEJ_EXE_PATH=\"${IMAGEJ_EXE_PATH}\"

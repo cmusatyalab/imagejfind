@@ -36,7 +36,6 @@
 
 struct filter_instance {
    int ij_fd;
-   FILE *ij_file;
    int macro_len;
    char *macro;
 };
@@ -49,8 +48,8 @@ static void transmit_image(int img_width, int img_height,
 
    printf("Sending %d x %d image...\n", img_height, img_width);
    
-   write(fd, &net_img_width, sizeof(net_img_width));
-   write(fd, &net_img_height, sizeof(net_img_height));
+   send(fd, &net_img_width, sizeof(int), MSG_MORE);
+   send(fd, &net_img_height, sizeof(int), MSG_MORE);
    
    int row, col;
    const unsigned char * diamond_ptr = diamond_buf;
@@ -58,8 +57,13 @@ static void transmit_image(int img_width, int img_height,
    
    for (row = 0; row < img_height; row++) {
       for (col = 0; col < img_width; col++) {
-         write(fd, &zero, 1);
-         write(fd, diamond_ptr, 3);
+         send(fd, &zero, 1, MSG_MORE);
+         int flags;
+         if ((row == img_height - 1) && (col == img_width - 1)) 
+            flags = 0;
+         else
+            flags = MSG_MORE;
+         send(fd, diamond_ptr, 3, flags);
          diamond_ptr += 4;
       }
    }
@@ -70,15 +74,24 @@ static void transmit_macro(int macro_len, char *macro, int fd)
    int net_macro_len = htonl(macro_len);
 
    printf("Sending macro...\n");
-   write(fd, &net_macro_len, sizeof(net_macro_len));
-   write(fd, macro, macro_len);
+   send(fd, &net_macro_len, sizeof(int), MSG_MORE);
+   send(fd, macro, macro_len, 0);
 }
 
 static double get_result(int fd)
 {
    double result;
    char buf[512];
-   read(fd, buf, 512);
+   memset(buf, 0, sizeof(buf));
+   int nread = 0, read_result;
+   do {
+       read_result = recv(fd, buf + nread, 1, 0);
+       if (read_result < 0) {
+	 perror("recv");
+         return 0.0;
+       } else
+         nread += read_result;
+   } while (buf[nread - 1] != '\n');
    sscanf(buf, "%lE", &result);
    return result;
 }
@@ -92,13 +105,17 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    struct hostent host, *result;
    char buf[1024];
    int h_errno;
-   if (gethostbyname2_r("ijvm", AF_INET, &host, buf, 1024, &result, &h_errno) < 0) {
+   if ((gethostbyname2_r("ijvm", AF_INET, &host, buf, sizeof(buf), &result, &h_errno) < 0) || (!result)) {
       perror("gethost");
       *filter_args = NULL;
    } else {
-       struct sockaddr_in *addr = (struct sockaddr_in *)(result->h_addr_list[0]);
-       addr->sin_port = htons(PORT);
-       if (connect(ij_socket, (struct sockaddr *)addr, result->h_length) < 0) {
+       struct in_addr *sin_addr = (struct in_addr *)(result->h_addr_list[0]);
+       struct sockaddr_in sock_addr;
+       memset(&sock_addr, 0, sizeof(struct sockaddr_in));
+       sock_addr.sin_family = AF_INET;
+       sock_addr.sin_port = htons(PORT);
+       memcpy(&sock_addr.sin_addr, sin_addr, sizeof(sock_addr.sin_addr));
+       if (connect(ij_socket, (struct sockaddr *)&sock_addr, sizeof(struct sockaddr_in)) < 0) {
          perror("connect");
          *filter_args = NULL;
        } else {
@@ -146,6 +163,8 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    fflush(stdout);
    
    double result = get_result(inst->ij_fd);
+   printf("Result: %lf\n", result);
+   fflush(stdout);
    
    lf_write_attr(ohandle, "_matlab_ans.double", sizeof(double), (unsigned char *)&result);
 

@@ -1,10 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(ImageJFind, 0.1)
+AC_INIT(ImageJFind, 1.0.3)
 AC_CONFIG_SRCDIR(src)
 AM_INIT_AUTOMAKE(foreign)
 AM_CONFIG_HEADER(config.h)
-AM_MAINTAINER_MODE
 
 AC_ISC_POSIX
 AC_PROG_CC

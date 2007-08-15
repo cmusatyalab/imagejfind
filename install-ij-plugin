@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mkdir -p ${1}/plugins/Diamond
+mkdir -p ${1}/plugins/Diamond/ijloader
+install -m 644 java/* ${1}/plugins/Diamond
+install -m 644 java/ijloader/* ${1}/plugins/Diamond/ijloader
+ln -s plugins/Diamond/ijloader ${1}/ijloader

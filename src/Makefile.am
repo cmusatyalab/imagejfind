@@ -3,6 +3,8 @@
 gladedir = $(datadir)/imagejfind/glade
 filterdir = $(datadir)/imagejfind/filter
 
+EXTRA_DIST = fil_imagej_exec.c
+
 INCLUDES = \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \

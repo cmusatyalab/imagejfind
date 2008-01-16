@@ -80,6 +80,8 @@ public class IJLoader {
 		}
 	}
 
+    
+
 	public static PrintStream getOutputStream() {
 		return savedOut;
 	}

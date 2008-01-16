@@ -57,6 +57,7 @@ public class IJLoader {
         });
 
         System.setOut(new PrintStream(new OutputStream() {
+            @Override
             public void write(int i) {
             }
         }));

@@ -5,6 +5,7 @@ import ij.WindowManager;
 import ij.measure.ResultsTable;
 import ij.process.ColorProcessor;
 import ij.IJ;
+import ij.macro.Interpreter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,39 +43,89 @@ public class IJLoader {
 
         savedOut = System.out;
 
-        System.setOut(new PrintStream(new OutputStream() {
+        newOut = new PrintStream(new OutputStream() {
             @Override
+            public void write(int i) {
+                if (i != 13) {
+                    savedOut.write(i);
+                    System.err.write(i);
+                    outputEmitted = true;
+                    savedOut.flush();
+                    System.err.flush();
+                    System.err.println("write called, i = " + i);
+                }
+                System.err.println("write called...");
+            }
+        });
+
+        System.setOut(new PrintStream(new OutputStream() {
             public void write(int i) {
             }
         }));
 
         try {
+            int width, height, macroLen, pixBuffer[];
+            byte macroBuffer[];
+            String macroText;
             while (true) {
-                int width = iStream.readInt();
-                int height = iStream.readInt();
+                System.err.println("Reading image...");
 
-                int pixBuffer[] = new int[width * height];
+                width = iStream.readInt();
+                height = iStream.readInt();
+
+                pixBuffer = new int[width * height];
                 iStream.readFully(pixBuffer, 0, pixBuffer.length);
+
+                System.err.println("Image read.");
 
                 ImagePlus imp = new ImagePlus("diamond", new ColorProcessor(
                         width, height, pixBuffer));
 
                 WindowManager.setTempCurrentImage(imp);
 
-                int macroLen = iStream.readInt();
-                byte macroBuffer[] = new byte[macroLen];
+                System.err.println("Reading macro...");
+
+                macroLen = iStream.readInt();
+                macroBuffer = new byte[macroLen];
                 iStream.readFully(macroBuffer);
 
-                String macroText = new String(macroBuffer, 0,
-                        macroBuffer.length, "ISO8859_1");
+                macroText = new String(macroBuffer, 0, macroBuffer.length,
+                        "ISO8859_1");
+
+                System.err.println("Macro read.");
+                System.err.println(macroText);
+                System.err.println("Running macro...");
+
+                outputEmitted = false;
                 IJ.runMacro(macroText);
+
+                if (!outputEmitted) {
+                    System.err.println("No output received from filter");
+                    newOut.println("0.0");
+                }
+
+                System.err.println("Macro executed");
 
                 ResultsTable rTable = ResultsTable.getResultsTable();
                 if (rTable != null) {
                     rTable.reset();
                 }
 
+                WindowManager.setTempCurrentImage(null);
                 WindowManager.closeAllWindows();
+
+                ImagePlus lastImage;
+                do {
+                    lastImage = Interpreter.getLastBatchModeImage();
+                    if (lastImage != null) {
+                        Interpreter.removeBatchModeImage(lastImage);
+                    }
+                } while (lastImage != null);
+
+                System.err.print("Window count: ");
+                System.err.println(WindowManager.getWindowCount());
+                System.err.print("Image count: ");
+                System.err.println(WindowManager.getImageCount());
 
             }
         } catch (IOException e) {
@@ -99,5 +150,9 @@ public class IJLoader {
     }
 
     private static PrintStream savedOut;
+
+    private static PrintStream newOut;
+
+    private static boolean outputEmitted;
 
 }

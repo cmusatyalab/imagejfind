@@ -41,8 +41,6 @@ public class IJLoader {
 
         iStream.setByteOrder(ByteOrder.BIG_ENDIAN);
 
-        savedOut = System.out;
-
         newOut = new PrintStream(new OutputStream() {
             @Override
             public void write(int i) {
@@ -149,7 +147,7 @@ public class IJLoader {
         return savedOut;
     }
 
-    private static PrintStream savedOut;
+    private static PrintStream savedOut = System.out;
 
     private static PrintStream newOut;
 

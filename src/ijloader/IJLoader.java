@@ -100,6 +100,8 @@ public class IJLoader {
 
                 if (!outputEmitted) {
                     System.err.println("No output received from filter");
+                    newOut.println("RESULT");
+                    newOut.println(3);
                     newOut.println("0.0");
                 }
 

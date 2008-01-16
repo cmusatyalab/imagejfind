@@ -4,14 +4,12 @@ import ij.plugin.*;
 import ij.plugin.filter.Analyzer;
 import ij.measure.ResultsTable;
 import ij.plugin.frame.Recorder;
-import ij.Macro;
 import ij.*;
 import ijloader.IJLoader;
 
 import java.util.*;
 import java.io.*;
 import java.awt.*;
-import java.awt.Font;
 import java.awt.event.*;
 import java.awt.TextArea;
 import java.util.concurrent.*;
@@ -26,12 +24,18 @@ public class Diamond_Filter implements PlugIn {
 			String result = evaluate(
 						Macro.getValue(Macro.getOptions(), MACRO_FIELD_NAME, ""));
 			
-			if (!result.equals("") && isValidResult(result)) {
-				IJLoader.getOutputStream().println(result);
+			PrintStream out = IJLoader.getOutputStream();
+			
+            out.println("RESULT");
+
+            if (!result.equals("") && isValidResult(result)) {
+                out.println(result.length());
+                out.println(result);
 			} else {
 				System.err.print("Bad result: ");
 				System.err.println(result);
-				IJLoader.getOutputStream().println("0.0");
+				out.println("3");
+				out.println("0.0");
 			}
 		} else {
 			System.err.println("Opening dialog...");

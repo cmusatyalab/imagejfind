@@ -22,10 +22,12 @@ public class IJLoader {
             this.stream = stream;
         }
 
+        @Override
         public int read() throws IOException {
             return stream.read();
         }
 
+        @Override
         public int read(byte[] b, int off, int len) throws IOException {
             return stream.read(b, off, len);
         }
@@ -41,6 +43,7 @@ public class IJLoader {
         savedOut = System.out;
 
         System.setOut(new PrintStream(new OutputStream() {
+            @Override
             public void write(int i) {
             }
         }));

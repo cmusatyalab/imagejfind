@@ -1,12 +1,15 @@
 package ijloader;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.ImageWindow;
+import ij.macro.Interpreter;
 import ij.measure.ResultsTable;
 import ij.process.ColorProcessor;
-import ij.IJ;
-import ij.macro.Interpreter;
+import ij.text.TextWindow;
 
+import java.awt.Frame;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,6 +21,10 @@ import javax.imageio.stream.ImageInputStreamImpl;
 
 public class IJLoader {
 
+    private static void debugPrint(String msg) {
+        System.err.println("[IJLoader] " + msg);
+    }
+    
     private static class ImageInputStreamWrapper extends ImageInputStreamImpl {
         public ImageInputStreamWrapper(InputStream stream) {
             this.stream = stream;
@@ -41,24 +48,23 @@ public class IJLoader {
 
         iStream.setByteOrder(ByteOrder.BIG_ENDIAN);
 
+//        IJ.debugMode = true;
+        
         newOut = new PrintStream(new OutputStream() {
             @Override
             public void write(int i) {
                 if (i != 13) {
                     savedOut.write(i);
-                    System.err.write(i);
                     outputEmitted = true;
                     savedOut.flush();
-                    System.err.flush();
-                    System.err.println("write called, i = " + i);
                 }
-                System.err.println("write called...");
             }
         });
 
         System.setOut(new PrintStream(new OutputStream() {
             @Override
             public void write(int i) {
+                System.err.write(i);
             }
         }));
 
@@ -67,7 +73,9 @@ public class IJLoader {
             byte macroBuffer[];
             String macroText;
             while (true) {
-                System.err.println("Reading image...");
+                debugPrint("Reading image...");
+
+                newOut.println("BEGIN");
 
                 width = iStream.readInt();
                 height = iStream.readInt();
@@ -75,14 +83,16 @@ public class IJLoader {
                 pixBuffer = new int[width * height];
                 iStream.readFully(pixBuffer, 0, pixBuffer.length);
 
-                System.err.println("Image read.");
+                debugPrint("Image read.");
 
                 ImagePlus imp = new ImagePlus("diamond", new ColorProcessor(
                         width, height, pixBuffer));
 
-                WindowManager.setTempCurrentImage(imp);
+                ImageWindow imgWin = new ImageWindow(imp);
+                imgWin.setVisible(true);
+//                WindowManager.setTempCurrentImage(imp);
 
-                System.err.println("Reading macro...");
+                debugPrint("Reading macro...");
 
                 macroLen = iStream.readInt();
                 macroBuffer = new byte[macroLen];
@@ -91,29 +101,46 @@ public class IJLoader {
                 macroText = new String(macroBuffer, 0, macroBuffer.length,
                         "ISO8859_1");
 
-                System.err.println("Macro read.");
-                System.err.println(macroText);
-                System.err.println("Running macro...");
+                debugPrint("Macro read.");
+//                debugPrint(macroText);
+                debugPrint("Running macro...");
 
                 outputEmitted = false;
-                IJ.runMacro(macroText);
+                String macroResult = IJ.runMacro(macroText);
+                debugPrint("macroResult: " + macroResult);
+                
+                debugPrint(" in batch mode: " + Interpreter.isBatchMode());
+
+                debugPrint("** LOG ");
+                Frame f[] = WindowManager.getNonImageWindows();
+                for (Frame frame : f) {
+                    if (frame instanceof TextWindow) {
+                        TextWindow tw = (TextWindow) frame;
+                        debugPrint(" * " + tw.getTitle());
+                        debugPrint(tw.getTextPanel().getText());
+                    }
+                }
+                debugPrint("** END LOG ");
 
                 if (!outputEmitted) {
-                    System.err.println("No output received from filter");
+                    debugPrint("No output received from filter");
                     newOut.println("RESULT");
                     newOut.println(3);
                     newOut.println("0.0");
                 }
 
-                System.err.println("Macro executed");
+                debugPrint("Macro executed");
 
                 ResultsTable rTable = ResultsTable.getResultsTable();
                 if (rTable != null) {
                     rTable.reset();
                 }
 
-                WindowManager.setTempCurrentImage(null);
+                debugPrint("going to close all windows");
+                imgWin.close();
+//                WindowManager.setTempCurrentImage(null);
                 WindowManager.closeAllWindows();
+                debugPrint(" done");
 
                 ImagePlus lastImage;
                 do {
@@ -123,11 +150,10 @@ public class IJLoader {
                     }
                 } while (lastImage != null);
 
-                System.err.print("Window count: ");
-                System.err.println(WindowManager.getWindowCount());
-                System.err.print("Image count: ");
-                System.err.println(WindowManager.getImageCount());
-
+                debugPrint("Window count: ");
+                debugPrint(Integer.toString(WindowManager.getWindowCount()));
+                debugPrint("Image count: ");
+                debugPrint(Integer.toString(WindowManager.getImageCount()));
             }
         } catch (IOException e) {
             throw new RuntimeException(
@@ -136,26 +162,29 @@ public class IJLoader {
     }
 
     public static void writeDiamondAttribute(String name, String val) {
-        System.err.println("writeDiamondAttribute: " + name + " -> " + val);
+        debugPrint("writeDiamondAttribute: " + name + " -> " + val);
+        newOut.println("ATTR");
         
-        PrintStream out = getOutputStream();
-        out.println("ATTR_NAME");
-        out.println(name.length());
-        out.println(name);
+        newOut.println("K");
+        newOut.println(name.length());
+        newOut.println(name);
 
-        out.println("ATTR_VAL");
-        out.println(val.length());
-        out.println(val);
+        newOut.println("V");
+        newOut.println(val.length());
+        newOut.println(val);
     }
     
-    public static PrintStream getOutputStream() {
-        return savedOut;
+    public static void writeResult(String val) {
+        debugPrint("result: " + val);
+        
+        newOut.println("RESULT");
+        newOut.println(val.length());
+        newOut.println(val);
     }
-
+    
     private static PrintStream savedOut = System.out;
 
     private static PrintStream newOut;
 
     private static boolean outputEmitted;
-
 }

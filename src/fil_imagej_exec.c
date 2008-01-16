@@ -27,6 +27,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <unistd.h>
+#include <assert.h>
 
 #ifndef IMAGEJ_EXE_PATH
 #error Must specify IMAGEJ_EXE_PATH as compilation flag
@@ -79,12 +80,17 @@ static double process_attrs_and_get_result(FILE *fp, lf_obj_handle_t ohandle)
 {
   char *lineptr = NULL;
 
+  int begun = 0;
   int len;
   size_t n;
 
   while (1) {
     getline(&lineptr, &n, fp);
-    if (strcmp(lineptr, "ATTR\n") == 0) {
+    printf("getline says: %s\n", lineptr);
+
+    if (strcmp(lineptr, "BEGIN\n") == 0 && !begun) {
+      begun = 1;
+    } else if (strcmp(lineptr, "ATTR\n") == 0) {
       char *attr_name;
       char *attr_val;
 
@@ -98,6 +104,7 @@ static double process_attrs_and_get_result(FILE *fp, lf_obj_handle_t ohandle)
       fread(attr_val, len + 1, 1, fp);
       attr_val[len] = '\0';
 
+      printf("%s -> %s\n", attr_name, attr_val);
       lf_write_attr(ohandle, attr_name, len + 1, (unsigned char *) attr_val);
       free(attr_name);
       free(attr_val);
@@ -111,11 +118,16 @@ static double process_attrs_and_get_result(FILE *fp, lf_obj_handle_t ohandle)
       result_str[len] = '\0';
 
       result = strtod(result_str, NULL);
+      printf("result: %g\n", result);
 
       free(result_str);
       free(lineptr);
 
       return result;
+    } else {
+      printf("BAD LINE %s", lineptr);
+      free(lineptr);
+      return -1;
     }
 
     free(lineptr);
@@ -199,8 +211,6 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    fflush(stdout);
    
    double result = process_attrs_and_get_result(inst->ij_from_file, ohandle);
-   
-   lf_write_attr(ohandle, "_matlab_ans.double", sizeof(double), (unsigned char *)&result);
 
    return (int)(result);
 }

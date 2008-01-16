@@ -136,6 +136,8 @@ public class IJLoader {
     }
 
     public static void writeDiamondAttribute(String name, String val) {
+        System.err.println("writeDiamondAttribute: " + name + " -> " + val);
+        
         PrintStream out = getOutputStream();
         out.println("ATTR_NAME");
         out.println(name.length());

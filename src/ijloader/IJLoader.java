@@ -83,6 +83,17 @@ public class IJLoader {
         }
     }
 
+    public static void writeDiamondAttribute(String name, String val) {
+        PrintStream out = getOutputStream();
+        out.println("ATTR_NAME");
+        out.println(name.length());
+        out.println(name);
+
+        out.println("ATTR_VAL");
+        out.println(val.length());
+        out.println(val);
+    }
+    
     public static PrintStream getOutputStream() {
         return savedOut;
     }

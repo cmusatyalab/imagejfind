@@ -12,6 +12,8 @@
  * CREDITS.
  */
 
+#define _GNU_SOURCE
+
 #include "lib_filter.h"
 
 #include <arpa/inet.h>
@@ -73,11 +75,52 @@ static void transmit_macro(int macro_len, char *macro, FILE *fp)
    fwrite(macro, macro_len, 1, fp);
 }
 
-static double get_result(FILE *fp, int fd)
+static double process_attrs_and_get_result(FILE *fp, lf_obj_handle_t ohandle)
 {
-   double result;
-   fscanf(fp, "%lE", &result);
-   return result;
+  char *lineptr = NULL;
+
+  int len;
+  size_t n;
+
+  while (1) {
+    getline(&lineptr, &n, fp);
+    if (strcmp(lineptr, "ATTR\n") == 0) {
+      char *attr_name;
+      char *attr_val;
+
+      fscanf(fp, "K\n%d\n", &len);
+      attr_name = malloc(len + 1);
+      fread(attr_name, len + 1, 1, fp);
+      attr_name[len] = '\0';
+
+      fscanf(fp, "V\n%d\n", &len);
+      attr_val = malloc(len + 1);
+      fread(attr_val, len + 1, 1, fp);
+      attr_val[len] = '\0';
+
+      lf_write_attr(ohandle, attr_name, len + 1, (unsigned char *) attr_val);
+      free(attr_name);
+      free(attr_val);
+    } else if (strcmp(lineptr, "RESULT\n") == 0) {
+      char *result_str;
+      double result;
+
+      fscanf(fp, "%d\n", &len);
+      result_str = malloc(len + 1);
+      fread(result_str, len + 1, 1, fp);
+      result_str[len] = '\0';
+
+      result = strtod(result_str, NULL);
+
+      free(result_str);
+      free(lineptr);
+
+      return result;
+    }
+
+    free(lineptr);
+    lineptr = NULL;
+  }
 }
 
 int f_init_imagej_exec (int num_arg, char **args, int bloblen,
@@ -155,7 +198,7 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    printf("New image + macro sent...\n");
    fflush(stdout);
    
-   double result = get_result(inst->ij_from_file, inst->ij_from_fd);
+   double result = process_attrs_and_get_result(inst->ij_from_file, ohandle);
    
    lf_write_attr(ohandle, "_matlab_ans.double", sizeof(double), (unsigned char *)&result);
 

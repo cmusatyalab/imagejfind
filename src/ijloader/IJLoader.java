@@ -1,19 +1,15 @@
 package ijloader;
 
 import ij.IJ;
+import ij.io.Opener;
 import ij.ImagePlus;
 import ij.WindowManager;
-import ij.gui.ImageWindow;
 import ij.macro.Interpreter;
 import ij.measure.ResultsTable;
-import ij.process.ColorProcessor;
 import ij.text.TextWindow;
 
 import java.awt.Frame;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.ByteOrder;
 
 import javax.imageio.stream.ImageInputStream;
@@ -24,7 +20,7 @@ public class IJLoader {
     private static void debugPrint(String msg) {
         System.err.println("[IJLoader] " + msg);
     }
-    
+
     private static class ImageInputStreamWrapper extends ImageInputStreamImpl {
         public ImageInputStreamWrapper(InputStream stream) {
             this.stream = stream;
@@ -49,7 +45,7 @@ public class IJLoader {
         iStream.setByteOrder(ByteOrder.BIG_ENDIAN);
 
 //        IJ.debugMode = true;
-        
+
         newOut = new PrintStream(new OutputStream() {
             @Override
             public void write(int i) {
@@ -69,28 +65,31 @@ public class IJLoader {
         }));
 
         try {
-            int width, height, macroLen, pixBuffer[];
-            byte macroBuffer[];
+            int imgLen, macroLen;
+            byte macroBuffer[], pixBuffer[];
             String macroText;
             while (true) {
                 debugPrint("Reading image...");
 
                 newOut.println("BEGIN");
 
-                width = iStream.readInt();
-                height = iStream.readInt();
+                imgLen = iStream.readInt();
 
-                pixBuffer = new int[width * height];
+                pixBuffer = new byte[imgLen];
                 iStream.readFully(pixBuffer, 0, pixBuffer.length);
 
                 debugPrint("Image read.");
 
-                ImagePlus imp = new ImagePlus("diamond", new ColorProcessor(
-                        width, height, pixBuffer));
+		// save as temp
+		File tmp = File.createTempFile("ijloader", ".img");
+		//		tmp.deleteOnExit();
+		FileOutputStream fos = new FileOutputStream(tmp);
+		fos.write(pixBuffer);
+		fos.close();
 
-                ImageWindow imgWin = new ImageWindow(imp);
-                imgWin.setVisible(true);
-//                WindowManager.setTempCurrentImage(imp);
+		new Opener().open(tmp.getPath());
+
+		//		tmp.delete();
 
                 debugPrint("Reading macro...");
 
@@ -137,7 +136,6 @@ public class IJLoader {
                 }
 
                 debugPrint("going to close all windows");
-                imgWin.close();
 //                WindowManager.setTempCurrentImage(null);
                 WindowManager.closeAllWindows();
                 debugPrint(" done");

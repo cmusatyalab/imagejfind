@@ -43,28 +43,18 @@ struct filter_instance {
    char *macro;
 };
 
-static void transmit_image(int img_width, int img_height,
-                           const unsigned char *diamond_buf, FILE *fp)
+static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
 {
-   int net_img_height = htonl(img_height);
-   int net_img_width = htonl(img_width);
+   unsigned char *obj_data;
+   size_t data_len;
 
-   printf("Sending %d x %d image...\n", img_height, img_width);
-   
-   fwrite(&net_img_width, sizeof(net_img_width), 1, fp);
-   fwrite(&net_img_height, sizeof(net_img_height), 1, fp);
-   
-   int row, col;
-   const unsigned char * diamond_ptr = diamond_buf;
-   char zero = 0;
-   
-   for (row = 0; row < img_height; row++) {
-      for (col = 0; col < img_width; col++) {
-         fwrite(&zero, 1, 1, fp);
-         fwrite(diamond_ptr, 3, 1, fp);
-         diamond_ptr += 4;
-      }
-   }
+   lf_next_block(ohandle, INT_MAX, &data_len, &obj_data);
+
+   printf("Sending %d byte image...\n", data_len);
+   int net_img_size = htonl(data_len);
+
+   fwrite(&net_img_size, sizeof(net_img_size), 1, fp);
+   fwrite(obj_data, data_len, 1, fp);
 }
 
 static void transmit_macro(int macro_len, char *macro, FILE *fp)
@@ -189,22 +179,9 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
 
-   size_t len;
-   unsigned char *diamond_attr;
-
-   int width, height;
-
    printf("Executing search...\n");
-   
-   lf_ref_attr(ohandle, "_rows.int", &len, &diamond_attr);
-   height = *((int *) diamond_attr);
 
-   lf_ref_attr(ohandle, "_cols.int", &len, &diamond_attr);
-   width = *((int *) diamond_attr);
-
-   lf_ref_attr(ohandle, "_rgb_image.rgbimage", &len, &diamond_attr);
-
-   transmit_image(width, height, diamond_attr, inst->ij_to_file);
+   transmit_image(ohandle, inst->ij_to_file);
    transmit_macro(inst->macro_len, inst->macro, inst->ij_to_file);
    fflush(inst->ij_to_file);
    printf("New image + macro sent...\n");

@@ -188,6 +188,7 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    fflush(stdout);
    
    double result = process_attrs_and_get_result(inst->ij_from_file, ohandle);
+   lf_write_attr(ohandle, "_matlab_ans.double", sizeof(double), (unsigned char *)&result);
 
    return (int)(result);
 }

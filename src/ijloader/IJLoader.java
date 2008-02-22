@@ -44,18 +44,7 @@ public class IJLoader {
 
         iStream.setByteOrder(ByteOrder.BIG_ENDIAN);
 
-//        IJ.debugMode = true;
-
-        newOut = new PrintStream(new OutputStream() {
-            @Override
-            public void write(int i) {
-                if (i != 13) {
-                    savedOut.write(i);
-                    outputEmitted = true;
-                    savedOut.flush();
-                }
-            }
-        });
+        // IJ.debugMode = true;
 
         System.setOut(new PrintStream(new OutputStream() {
             @Override
@@ -162,7 +151,7 @@ public class IJLoader {
     public static void writeDiamondAttribute(String name, String val) {
         debugPrint("writeDiamondAttribute: " + name + " -> " + val);
         newOut.println("ATTR");
-        
+
         newOut.println("K");
         newOut.println(name.length());
         newOut.println(name);
@@ -171,18 +160,31 @@ public class IJLoader {
         newOut.println(val.length());
         newOut.println(val);
     }
-    
+
     public static void writeResult(String val) {
         debugPrint("result: " + val);
-        
+
         newOut.println("RESULT");
         newOut.println(val.length());
         newOut.println(val);
     }
-    
+
     private static PrintStream savedOut = System.out;
 
     private static PrintStream newOut;
+
+    static {
+        newOut = new PrintStream(new OutputStream() {
+            @Override
+            public void write(int i) {
+                if (i != 13) {
+                    savedOut.write(i);
+                    outputEmitted = true;
+                    savedOut.flush();
+                }
+            }
+        });
+    }
 
     private static boolean outputEmitted;
 }

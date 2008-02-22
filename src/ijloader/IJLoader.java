@@ -69,16 +69,16 @@ public class IJLoader {
 
                 debugPrint("Image read.");
 
-		// save as temp
-		File tmp = File.createTempFile("ijloader", ".img");
-		//		tmp.deleteOnExit();
-		FileOutputStream fos = new FileOutputStream(tmp);
-		fos.write(pixBuffer);
-		fos.close();
+                // save as temp
+                File tmp = File.createTempFile("ijloader", ".img");
+                // tmp.deleteOnExit();
+                FileOutputStream fos = new FileOutputStream(tmp);
+                fos.write(pixBuffer);
+                fos.close();
 
-		new Opener().open(tmp.getPath());
+                new Opener().open(tmp.getPath());
 
-		//		tmp.delete();
+                // tmp.delete();
 
                 debugPrint("Reading macro...");
 
@@ -90,13 +90,13 @@ public class IJLoader {
                         "ISO8859_1");
 
                 debugPrint("Macro read.");
-//                debugPrint(macroText);
+                // debugPrint(macroText);
                 debugPrint("Running macro...");
 
                 outputEmitted = false;
                 String macroResult = IJ.runMacro(macroText);
                 debugPrint("macroResult: " + macroResult);
-                
+
                 debugPrint(" in batch mode: " + Interpreter.isBatchMode());
 
                 debugPrint("** LOG ");
@@ -125,7 +125,7 @@ public class IJLoader {
                 }
 
                 debugPrint("going to close all windows");
-//                WindowManager.setTempCurrentImage(null);
+                // WindowManager.setTempCurrentImage(null);
                 WindowManager.closeAllWindows();
                 debugPrint(" done");
 

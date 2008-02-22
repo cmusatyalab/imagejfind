@@ -23,19 +23,14 @@ public class Diamond_Filter implements PlugIn {
             String result = evaluate(Macro.getValue(Macro.getOptions(),
                     MACRO_FIELD_NAME, ""));
 
-            PrintStream out = IJLoader.getOutputStream();
-
-            out.println("RESULT");
-
-            if (!result.equals("") && isValidResult(result)) {
-                out.println(result.length());
-                out.println(result);
-            } else {
-                System.err.print("Bad result: ");
+            System.err.println(" Writing result: " + result);
+            if (result.equals("") || !isValidResult(result)) {
+                System.err.print(" Bad result: ");
                 System.err.println(result);
-                out.println("3");
-                out.println("0.0");
+                result = "0.0";
             }
+            
+            IJLoader.writeResult(result);
         } else {
             System.err.println("Opening dialog...");
             new DiamondFilterDialog();

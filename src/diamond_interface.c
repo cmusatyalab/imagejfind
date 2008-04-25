@@ -121,6 +121,8 @@ static ls_search_handle_t generic_search (char *filter_spec_name) {
   // check for snapfind filter
   if (access("/opt/snapfind/lib/fil_rgb.so", F_OK) == 0) {
     rgb_filter_name = "/opt/snapfind/lib/fil_rgb.so";
+  } else if (access("/usr/local/diamond/lib/fil_rgb.so", F_OK) == 0) {
+    rgb_filter_name = "/usr/local/diamond/lib/fil_rgb.so";
   } else {
     // old way
     rgb_filter_name = IMAGEJFIND_FILTERDIR "/fil_rgb.so";

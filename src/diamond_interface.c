@@ -251,7 +251,7 @@ gboolean diamond_result_callback(gpointer g_data) {
 
     update_stats(dr);
 
-    ls_abort_search(dr);
+    ls_terminate_search(dr);
     return FALSE;
   }
 

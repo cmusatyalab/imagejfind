@@ -91,7 +91,7 @@ public class IJLoader {
 
         new Opener().open(tmp.getPath());
 
-        // tmp.delete();
+        tmp.delete();
 
         debugPrint("Reading macro...");
 

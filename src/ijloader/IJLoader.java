@@ -20,6 +20,8 @@ public class IJLoader {
 
         private boolean outputEmitted;
 
+        private boolean resultEmitted;
+
         public IJLoaderOutputStream(OutputStream out) {
             super(out);
         }
@@ -33,12 +35,25 @@ public class IJLoader {
             }
         }
 
+        public void writeResult(String result) {
+            if (resultEmitted) {
+                throw new IllegalStateException("Result already written");
+            }
+
+            resultEmitted = true;
+
+            println("RESULT");
+            println(result.length());
+            println(result);
+        }
+
         public boolean getOutputEmitted() {
             return outputEmitted;
         }
 
-        public void resetOutputEmitted() {
+        public void resetEmitted() {
             outputEmitted = false;
+            resultEmitted = false;
         }
     }
 
@@ -106,7 +121,7 @@ public class IJLoader {
         debugPrint(macroText);
         debugPrint("Running macro...");
 
-        specialOut.resetOutputEmitted();
+        specialOut.resetEmitted();
         String macroResult = IJ.runMacro(macroText);
         debugPrint("macroResult: " + macroResult);
 
@@ -125,9 +140,7 @@ public class IJLoader {
 
         if (!specialOut.getOutputEmitted()) {
             debugPrint("No output received from filter");
-            specialOut.println("RESULT");
-            specialOut.println(3);
-            specialOut.println("0.0");
+            specialOut.writeResult("0.0");
         }
 
         debugPrint("Macro executed");
@@ -171,9 +184,6 @@ public class IJLoader {
 
     public static void writeResult(String val) {
         debugPrint("result: " + val);
-
-        specialOut.println("RESULT");
-        specialOut.println(val.length());
-        specialOut.println(val);
+        specialOut.writeResult(val);
     }
 }

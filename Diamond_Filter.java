@@ -1,16 +1,22 @@
+import ij.IJ;
+import ij.Macro;
 import ij.WindowManager;
-import ij.plugin.*;
-import ij.plugin.filter.Analyzer;
 import ij.measure.ResultsTable;
+import ij.plugin.PlugIn;
+import ij.plugin.filter.Analyzer;
 import ij.plugin.frame.Recorder;
-import ij.*;
 import ijloader.IJLoader;
 
-import java.util.*;
-import java.io.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.TextArea;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.TextEvent;
+import java.awt.event.TextListener;
+import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
+import java.util.*;
+import java.util.Queue;
 import java.util.concurrent.*;
 
 public class Diamond_Filter implements PlugIn {
@@ -20,8 +26,10 @@ public class Diamond_Filter implements PlugIn {
         rTable = Analyzer.getResultsTable();
 
         if (IJ.macroRunning()) {
-            String result = evaluate(Macro.getValue(Macro.getOptions(),
-                    MACRO_FIELD_NAME, ""));
+            String options = Macro.getOptions();
+            System.err.println("options: " + options);
+            String result = evaluate(Macro.getValue(options, MACRO_FIELD_NAME,
+                    ""));
 
             System.err.println(" Writing result: " + result);
             if (result.equals("") || !isValidResult(result)) {
@@ -29,7 +37,7 @@ public class Diamond_Filter implements PlugIn {
                 System.err.println(result);
                 result = "0.0";
             }
-            
+
             IJLoader.writeResult(result);
         } else {
             System.err.println("Opening dialog...");

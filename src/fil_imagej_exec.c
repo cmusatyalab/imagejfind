@@ -28,10 +28,12 @@
 #include <signal.h>
 #include <unistd.h>
 #include <assert.h>
+#include <glib.h>
 
-#ifndef IMAGEJ_EXE_PATH
-#error Must specify IMAGEJ_EXE_PATH as compilation flag
-#endif
+#include <stdint.h>
+#include "imagej-bin.h"
+#include "ijloader-bin.h"
+#include "diamond_filter-bin.h"
 
 struct filter_instance {
    int ij_pid;
@@ -141,11 +143,21 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
       close(child_out_fd[0]);
       dup2(child_in_fd[0], STDIN_FILENO);
       dup2(child_out_fd[1], STDOUT_FILENO);
-      
-      if (chdir(IMAGEJ_EXE_PATH) < 0) {
+
+      char temp_dir[] = P_tmpdir "/imagejfindXXXXXX";
+      if (mkdtemp(temp_dir) == NULL) {
+	 perror("Could not create temporary directory");
+	 exit(0);
+      }
+
+      if (chdir(temp_dir) < 0) {
          perror("Could not enter ImageJ directory");
          exit(0);
       }
+
+      // uncompress imagej
+      g_file_set_contents("ImageJ.zip", imagej_bin.data, imagej_bin.len, NULL);
+
       setenv("DISPLAY", "localhost:100", 1);
 
       execlp("java", "java", "-server", "-cp", "ij.jar:.", 

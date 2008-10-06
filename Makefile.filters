@@ -1,4 +1,15 @@
-IMAGEJ_EXE_PATH=/opt/ij
+data/filter/fil_imagej_exec.so: src/fil_imagej_exec.c src/imagej-bin.h src/ijloader-bin.h src/diamond_filter-bin.h
+	gcc -fPIC `pkg-config opendiamond glib-2.0 --cflags --libs` -O2 -g -m32 -Wall -shared  -o $@ src/fil_imagej_exec.c
 
-data/filter/fil_imagej_exec.so: src/fil_imagej_exec.c
-	gcc -fPIC `pkg-config opendiamond --cflags` -O2 -g -m32 -Wall -shared  -o $@ src/fil_imagej_exec.c -DIMAGEJ_EXE_PATH=\"${IMAGEJ_EXE_PATH}\"
+
+src/imagej-bin.h: ij140.zip src/encapsulate
+	./src/encapsulate imagej_bin < $< > $@
+
+src/ijloader-bin.h: ijloader.jar src/encapsulate
+	./src/encapsulate ijloader_bin < $< > $@
+
+src/diamond_filter-bin.h: diamond_filter.jar src/encapsulate
+	./src/encapsulate diamond_filter_bin < $< > $@
+
+src/encapsulate: src/encapsulate.c
+	gcc -O2 -Wall -g $< -o $@

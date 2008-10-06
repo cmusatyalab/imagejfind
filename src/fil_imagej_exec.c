@@ -191,16 +191,16 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
 				   diamond_filter_bin.len, NULL));
 
       // write user blob
-      g_assert(mkdir("filter_plugins", 0700) == 0);
-      g_assert(untar_blob("filter_plugins", bloblen, (char *)blob_data) == 0);
+      g_assert(mkdir("Diamond", 0700) == 0);
+      g_assert(untar_blob("Diamond", bloblen, (char *)blob_data) == 0);
 
 
       // go!
       g_assert(chdir("..") == 0);
       setenv("DISPLAY", "localhost:100", 1);
 
-      execlp("java", "java", "-server", "-cp", "ij.jar:.",
-             "ijloader.jar", NULL);
+      execlp("java", "java", "-server", "-cp", "ij.jar:ijloader.jar:.",
+             "ijloader.IJLoader", NULL);
    } else {
       close(child_in_fd[0]);
       close(child_out_fd[1]);

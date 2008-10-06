@@ -46,8 +46,8 @@ struct filter_instance {
    int ij_from_fd;
    FILE *ij_to_file;
    FILE *ij_from_file;
-   int macro_len;
-   char *macro;
+   char *macro_name;
+   char *dirname;
 };
 
 static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
@@ -68,7 +68,7 @@ static void transmit_macro(int macro_len, char *macro, FILE *fp)
 {
    int net_macro_len = htonl(macro_len);
 
-   printf("Sending macro...\n");
+   printf("Sending macro name...\n");
    fwrite(&net_macro_len, sizeof(net_macro_len), 1,  fp);
    fwrite(macro, macro_len, 1, fp);
 }
@@ -141,6 +141,22 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    pipe(child_in_fd);
    pipe(child_out_fd);
 
+   struct filter_instance *inst =
+     (struct filter_instance *)malloc(sizeof(struct filter_instance));
+
+   char temp_dir[] = P_tmpdir "/imagejfindXXXXXX";
+   if (mkdtemp(temp_dir) == NULL) {
+     perror("Could not create temporary directory");
+     exit(0);
+   }
+
+   if (chdir(temp_dir) < 0) {
+     perror("Could not enter ImageJ directory");
+     exit(0);
+   }
+
+   inst->dirname = strdup(temp_dir);
+
    int child_pid = fork();
 
    if (child_pid == 0) {
@@ -149,25 +165,14 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
       dup2(child_in_fd[0], STDIN_FILENO);
       dup2(child_out_fd[1], STDOUT_FILENO);
 
-      char temp_dir[] = P_tmpdir "/imagejfindXXXXXX";
-      if (mkdtemp(temp_dir) == NULL) {
-	 perror("Could not create temporary directory");
-	 exit(0);
-      }
-
-      if (chdir(temp_dir) < 0) {
-         perror("Could not enter ImageJ directory");
-         exit(0);
-      }
-
       // write ImageJ
       g_assert(g_file_set_contents(IMAGEJ_FILE,
 				   (const gchar *) imagej_bin.data,
 				   imagej_bin.len, NULL));
 
       // create imagej environment
-      char *args[] = { "unzip", IMAGEJ_FILE, NULL };
-      g_assert(g_spawn_sync(NULL, args, NULL,
+      char *spawn_args[] = { "unzip", IMAGEJ_FILE, NULL };
+      g_assert(g_spawn_sync(NULL, spawn_args, NULL,
 			    G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
 			    G_SPAWN_STDERR_TO_DEV_NULL,
 			    NULL, NULL, NULL, NULL, NULL, NULL));
@@ -199,25 +204,18 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    } else {
       close(child_in_fd[0]);
       close(child_out_fd[1]);
- 
-      struct filter_instance *inst = 
-         (struct filter_instance *)malloc(sizeof(struct filter_instance));
-   
+
       inst->ij_pid = child_pid;
       inst->ij_to_fd = child_in_fd[1];
       inst->ij_from_fd = child_out_fd[0];
       inst->ij_to_file = fdopen(inst->ij_to_fd, "w");
       inst->ij_from_file = fdopen(inst->ij_from_fd, "r");
-      inst->macro_len = bloblen;
-      inst->macro = malloc(bloblen);
-      if (bloblen > 0) {
-         memcpy(inst->macro, blob_data, bloblen);
-      }
-   
+      inst->macro_name = args[0];
+
       *filter_args = inst;
 
-   }    
-   
+   }
+
    return 0;
 }
 
@@ -228,7 +226,7 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    printf("Executing search...\n");
 
    transmit_image(ohandle, inst->ij_to_file);
-   transmit_macro(inst->macro_len, inst->macro, inst->ij_to_file);
+   transmit_macro(strlen(inst->macro_name), inst->macro_name, inst->ij_to_file);
    fflush(inst->ij_to_file);
    printf("New image + macro sent...\n");
    fflush(stdout);
@@ -251,10 +249,15 @@ int f_fini_imagej_exec (void *filter_args)
    fclose(inst->ij_from_file);
    close(inst->ij_to_fd);
    close(inst->ij_from_fd);
-   
-   if (inst->macro) {
-      free(inst->macro);
-   }
+   free(inst->macro_name);
+
+   char *spawn_args[] = { "rm", "-rf", inst->dirname, NULL };
+   g_assert(g_spawn_sync(NULL, spawn_args, NULL,
+			 G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
+			 G_SPAWN_STDERR_TO_DEV_NULL,
+			 NULL, NULL, NULL, NULL, NULL, NULL));
+
+   free(inst->dirname);
 
    free(inst);
 

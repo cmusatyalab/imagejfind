@@ -29,11 +29,16 @@
 #include <unistd.h>
 #include <assert.h>
 #include <glib.h>
+#include "quick_tar.h"
 
 #include <stdint.h>
 #include "imagej-bin.h"
 #include "ijloader-bin.h"
 #include "diamond_filter-bin.h"
+
+#define IMAGEJ_FILE "ImageJ.zip"
+#define DIAMOND_FILTER_FILE "diamond_filter.jar"
+#define IJLOADER_FILE "ijloader.jar"
 
 struct filter_instance {
    int ij_pid;
@@ -155,13 +160,42 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
          exit(0);
       }
 
-      // uncompress imagej
-      g_file_set_contents("ImageJ.zip", imagej_bin.data, imagej_bin.len, NULL);
+      // write ImageJ
+      g_assert(g_file_set_contents(IMAGEJ_FILE,
+				   (const gchar *) imagej_bin.data,
+				   imagej_bin.len, NULL));
 
+      // create imagej environment
+      char *args[] = { "unzip", IMAGEJ_FILE, NULL };
+      g_assert(g_spawn_sync(NULL, args, NULL,
+			    G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
+			    G_SPAWN_STDERR_TO_DEV_NULL,
+			    NULL, NULL, NULL, NULL, NULL, NULL));
+
+      g_assert(chdir("ImageJ") == 0);
+
+      // write ijloader
+      g_assert(g_file_set_contents(IJLOADER_FILE,
+				   (const gchar *) ijloader_bin.data,
+				   ijloader_bin.len, NULL));
+
+      // write diamond_filter
+      g_assert(chdir("plugins") == 0);
+      g_assert(g_file_set_contents(DIAMOND_FILTER_FILE,
+				   (const gchar *) diamond_filter_bin.data,
+				   diamond_filter_bin.len, NULL));
+
+      // write user blob
+      g_assert(mkdir("filter_plugins", 0700) == 0);
+      g_assert(untar_blob("filter_plugins", bloblen, (char *)blob_data) == 0);
+
+
+      // go!
+      g_assert(chdir("..") == 0);
       setenv("DISPLAY", "localhost:100", 1);
 
-      execlp("java", "java", "-server", "-cp", "ij.jar:.", 
-             "ijloader.IJLoader", NULL);
+      execlp("java", "java", "-server", "-cp", "ij.jar:.",
+             "ijloader.jar", NULL);
    } else {
       close(child_in_fd[0]);
       close(child_out_fd[1]);

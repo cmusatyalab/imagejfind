@@ -1,3 +1,17 @@
+/*
+ *  ImageJFind
+ *  A Diamond application for interoperating with ImageJ
+ *  Version 1
+ *
+ *  Copyright (c) 2008 Carnegie Mellon University
+ *  All Rights Reserved.
+ *
+ *  This software is distributed under the terms of the Eclipse Public
+ *  License, Version 1.0 which can be found in the file named LICENSE.
+ *  ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS SOFTWARE CONSTITUTES
+ *  RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <inttypes.h>

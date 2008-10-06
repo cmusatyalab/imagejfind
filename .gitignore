@@ -15,7 +15,13 @@ Makefile.in
 *.Po
 *.Tpo
 
+*.jar
+*.zip
+
 /src/imagejfind
 /aclocal.m4
+
+/src/*-bin.h
+/src/encapsulate
 
 /stamp*

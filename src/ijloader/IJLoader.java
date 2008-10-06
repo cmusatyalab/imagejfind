@@ -108,21 +108,24 @@ public class IJLoader {
 
         tmp.delete();
 
-        debugPrint("Reading macro...");
+        debugPrint("Reading macro name...");
 
         int macroLen = iStream.readInt();
         byte macroBuffer[] = new byte[macroLen];
         iStream.readFully(macroBuffer);
 
-        String macroText = new String(macroBuffer, 0, macroBuffer.length,
-                "ISO8859_1");
+        String macroName = new String(macroBuffer, 0, macroBuffer.length,
+                "ISO8859_1").replace('_', ' ');
 
-        debugPrint("Macro read.");
-        debugPrint(macroText);
+        debugPrint("Macro name read.");
+        debugPrint(macroName);
+
+        String evalString = "run(\"" + macroName + "\");";
         debugPrint("Running macro...");
+        debugPrint(evalString);
 
         specialOut.resetEmitted();
-        String macroResult = IJ.runMacro(macroText);
+        String macroResult = IJ.runMacro(evalString);
         debugPrint("macroResult: " + macroResult);
 
         debugPrint(" in batch mode: " + Interpreter.isBatchMode());

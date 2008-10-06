@@ -1,5 +1,7 @@
-data/filter/fil_imagej_exec.so: src/fil_imagej_exec.c src/imagej-bin.h src/ijloader-bin.h src/diamond_filter-bin.h
-	gcc -fPIC `pkg-config opendiamond glib-2.0 --cflags --libs` -O2 -g -m32 -Wall -shared  -o $@ src/fil_imagej_exec.c
+all: data/filter/fil_imagej_exec.so
+
+data/filter/fil_imagej_exec.so: src/fil_imagej_exec.c src/imagej-bin.h src/ijloader-bin.h src/diamond_filter-bin.h src/quick_tar.c src/quick_tar.h
+	gcc -fPIC `pkg-config opendiamond glib-2.0 --cflags --libs` -O2 -g -m32 -Wall -shared  -o $@ src/fil_imagej_exec.c src/quick_tar.c
 
 
 src/imagej-bin.h: ij140.zip src/encapsulate
@@ -13,3 +15,7 @@ src/diamond_filter-bin.h: diamond_filter.jar src/encapsulate
 
 src/encapsulate: src/encapsulate.c
 	gcc -O2 -Wall -g $< -o $@
+
+
+clean:
+	$(RM) data/filter/fil_imagej_exec.so src/*-bin.h src/encapsulate

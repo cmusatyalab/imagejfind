@@ -19,6 +19,7 @@ imagejfind_SOURCES = \
 	define.c define.h \
 	investigate.cpp investigate.h \
 	util.c util.h \
+	quick_tar.c quick_tar.h \
 	diamond_interface.c diamond_interface.h
 
 imagejfind_LDADD = @OPENDIAMOND_LIBS@ @GLADE_LIBS@

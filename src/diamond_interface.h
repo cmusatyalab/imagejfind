@@ -45,7 +45,8 @@ extern "C" {
 #endif
   void diamond_init(void);
   ls_search_handle_t diamond_imagej_search (gdouble threshold,
-					    const gchar *macro_file);
+					    const gchar *macro_name,
+					    const gchar *macro_dir);
   gboolean diamond_result_callback(gpointer data);
 #ifdef __cplusplus
 }

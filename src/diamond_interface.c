@@ -28,6 +28,8 @@
 #include "lib_filter.h"
 #include "lib_dconfig.h"
 
+#include "quick_tar.h"
+
 static struct collection_t collections[MAX_ALBUMS+1] = { { NULL } };
 static gid_list_t diamond_gid_list;
 
@@ -315,11 +317,13 @@ gboolean diamond_result_callback(gpointer g_data) {
 }
 
 
-ls_search_handle_t diamond_imagej_search(gdouble threshold, const gchar *macro_file) {
+ls_search_handle_t diamond_imagej_search(gdouble threshold,
+					 const gchar *macro_name,
+					 const gchar *macro_dir) {
   ls_search_handle_t dr;
   int fd, blob_fd;
   FILE *f;
-  gchar *name_used;
+  gchar *name_used, *blob_name_used;
   int err, blob_len;
   void *blob_data;
   struct stat stat_buf;
@@ -328,15 +332,15 @@ ls_search_handle_t diamond_imagej_search(gdouble threshold, const gchar *macro_f
   fd = g_file_open_tmp(NULL, &name_used, NULL);
   g_assert(fd >= 0);
 
-  blob_fd = open(macro_file, O_RDONLY);
+  blob_fd = g_file_open_tmp(NULL, &blob_name_used, NULL);
   g_assert(fd >= 0);
 
-  g_assert(fstat(blob_fd, &stat_buf) >= 0);
+  g_debug("going to tar %s", macro_dir);
+  blob_len = tar_blob(macro_dir + 7, blob_fd);
+  g_assert(blob_len >= 0);
 
-  blob_len = stat_buf.st_size;
-  
   blob_data = mmap(NULL, blob_len, PROT_READ, MAP_PRIVATE, blob_fd, 0);
-  g_assert(blob_data != MAP_FAILED); 
+  g_assert(blob_data != MAP_FAILED);
 
   // write out file for matlab search
   f = fdopen(fd, "a");
@@ -347,9 +351,11 @@ ls_search_handle_t diamond_imagej_search(gdouble threshold, const gchar *macro_f
 	  "EVAL_FUNCTION  f_eval_imagej_exec\n"
 	  "INIT_FUNCTION  f_init_imagej_exec\n"
 	  "FINI_FUNCTION  f_fini_imagej_exec\n"
+	  "ARG %s\n"
 	  "REQUIRES  RGB # dependencies\n"
 	  "MERIT  50 # some relative cost\n",
-	  (int)threshold);
+	  (int)threshold,
+	  macro_name);
   fflush(f);
 
   // initialize with generic search
@@ -368,6 +374,7 @@ ls_search_handle_t diamond_imagej_search(gdouble threshold, const gchar *macro_f
   close(blob_fd);
   fclose(f);
   g_free(name_used);
+  g_free(blob_name_used);
 
   // start search
   ls_start_search(dr);

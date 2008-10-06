@@ -33,9 +33,10 @@ static void setup_saved_search_store(void) {
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
 
-  saved_search_store = gtk_list_store_new(3,
+  saved_search_store = gtk_list_store_new(4,
 					  G_TYPE_STRING,
 					  G_TYPE_DOUBLE,
+					  G_TYPE_STRING,
 					  G_TYPE_STRING);
 
   gtk_tree_view_set_model(v, GTK_TREE_MODEL(saved_search_store));

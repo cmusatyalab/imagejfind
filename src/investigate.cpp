@@ -164,7 +164,8 @@ void on_startSearch_clicked (GtkButton *button,
 				      &model,
 				      &s_iter)) {
     gdouble threshold;
-    gchar *macro_file;
+    gchar *macro_dir;
+    gchar *macro_name;
     GtkWidget *stopSearch = glade_xml_get_widget(g_xml, "stopSearch");
 
 
@@ -172,10 +173,11 @@ void on_startSearch_clicked (GtkButton *button,
     gtk_tree_model_get(model,
 		       &s_iter,
 		       1, &threshold,
-		       2, &macro_file,
+		       2, &macro_name,
+		       3, &macro_dir,
 		       -1);
 
-    g_debug("searching with macro %s under threshold %lf", macro_file, threshold);
+    g_debug("searching with macro %s under threshold %lf", macro_name, threshold);
 
     // reset stats
     total_objects = 0;
@@ -185,7 +187,7 @@ void on_startSearch_clicked (GtkButton *button,
     displayed_objects = 0;
 
     // diamond
-    dr = diamond_imagej_search(threshold, macro_file);
+    dr = diamond_imagej_search(threshold, macro_name, macro_dir);
 
 
     // take the handle, put it into the idle callback to get

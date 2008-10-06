@@ -92,12 +92,24 @@ void draw_define_offscreen_items(gint a_w, gint a_h) {
 void on_saveSearchButton_clicked (GtkButton *button,
 				  gpointer   user_data) {
   GtkTreeIter iter;
+  int i;
 
   const gchar *save_name =
     gtk_entry_get_text(GTK_ENTRY(glade_xml_get_widget(g_xml, "searchName")));
 
-  const gchar *macro_file =
-    gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(glade_xml_get_widget(g_xml, "macroFile")));
+  const gchar *macro_name =
+    gtk_entry_get_text(GTK_ENTRY(glade_xml_get_widget(g_xml, "macroName")));
+
+  const gchar *macro_dir =
+    gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(glade_xml_get_widget(g_xml, "macroDir")));
+
+  gchar *macro_name2 = strdup(macro_name);
+  // replace the " " with "_"
+  for (i = 0; i < strlen(macro_name2); i++) {
+    if (macro_name2[i] == ' ') {
+      macro_name2[i] = '_';
+    }
+  }
 
   const gchar *threshold_str =
     gtk_entry_get_text(GTK_ENTRY(glade_xml_get_widget(g_xml, "threshold")));
@@ -109,8 +121,11 @@ void on_saveSearchButton_clicked (GtkButton *button,
   gtk_list_store_set(saved_search_store, &iter,
 		     0, save_name,
 		     1, threshold,
-		     2, macro_file,
+		     2, macro_name2,
+		     3, macro_dir,
 		     -1);
+
+  free(macro_name2);
 
   // don't allow double click
   gtk_widget_set_sensitive(GTK_WIDGET(button), FALSE);

@@ -157,6 +157,38 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
 
    inst->dirname = strdup(temp_dir);
 
+   // write ImageJ
+   g_assert(g_file_set_contents(IMAGEJ_FILE,
+				(const gchar *) imagej_bin.data,
+				imagej_bin.len, NULL));
+
+   // create imagej environment
+   char *spawn_args[] = { "unzip", IMAGEJ_FILE, NULL };
+   g_assert(g_spawn_sync(NULL, spawn_args, NULL,
+			 G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
+			 G_SPAWN_STDERR_TO_DEV_NULL,
+			 NULL, NULL, NULL, NULL, NULL, NULL));
+
+   g_assert(chdir("ImageJ") == 0);
+
+   // write ijloader
+   g_assert(g_file_set_contents(IJLOADER_FILE,
+				(const gchar *) ijloader_bin.data,
+				ijloader_bin.len, NULL));
+
+   // write diamond_filter
+   g_assert(chdir("plugins") == 0);
+   g_assert(g_file_set_contents(DIAMOND_FILTER_FILE,
+				(const gchar *) diamond_filter_bin.data,
+				diamond_filter_bin.len, NULL));
+
+   // write user blob
+   g_assert(mkdir("Diamond", 0700) == 0);
+   g_assert(untar_blob("Diamond", bloblen, (char *)blob_data) == 0);
+
+
+   // go!
+   g_assert(chdir("..") == 0);
    int child_pid = fork();
 
    if (child_pid == 0) {
@@ -165,38 +197,6 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
       dup2(child_in_fd[0], STDIN_FILENO);
       dup2(child_out_fd[1], STDOUT_FILENO);
 
-      // write ImageJ
-      g_assert(g_file_set_contents(IMAGEJ_FILE,
-				   (const gchar *) imagej_bin.data,
-				   imagej_bin.len, NULL));
-
-      // create imagej environment
-      char *spawn_args[] = { "unzip", IMAGEJ_FILE, NULL };
-      g_assert(g_spawn_sync(NULL, spawn_args, NULL,
-			    G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
-			    G_SPAWN_STDERR_TO_DEV_NULL,
-			    NULL, NULL, NULL, NULL, NULL, NULL));
-
-      g_assert(chdir("ImageJ") == 0);
-
-      // write ijloader
-      g_assert(g_file_set_contents(IJLOADER_FILE,
-				   (const gchar *) ijloader_bin.data,
-				   ijloader_bin.len, NULL));
-
-      // write diamond_filter
-      g_assert(chdir("plugins") == 0);
-      g_assert(g_file_set_contents(DIAMOND_FILTER_FILE,
-				   (const gchar *) diamond_filter_bin.data,
-				   diamond_filter_bin.len, NULL));
-
-      // write user blob
-      g_assert(mkdir("Diamond", 0700) == 0);
-      g_assert(untar_blob("Diamond", bloblen, (char *)blob_data) == 0);
-
-
-      // go!
-      g_assert(chdir("..") == 0);
       setenv("DISPLAY", "localhost:100", 1);
 
       execlp("java", "java", "-server", "-cp", "ij.jar:ijloader.jar:.",

@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  printf("const static struct {\n");
+  printf("static const struct {\n");
   printf("  const int64_t len;\n");
   printf("  const uint8_t data[];\n");
   printf("} %s = {\n", argv[1]);

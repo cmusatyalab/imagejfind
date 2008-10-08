@@ -186,9 +186,11 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    g_assert(mkdir("Diamond", 0700) == 0);
    g_assert(untar_blob("Diamond", bloblen, (char *)blob_data) == 0);
 
+   // write it again to the macros directory
+   g_assert(chdir("..") == 0);
+   g_assert(untar_blob("macros", bloblen, (char *)blob_data) == 0);
 
    // go!
-   g_assert(chdir("..") == 0);
    int child_pid = fork();
 
    if (child_pid == 0) {

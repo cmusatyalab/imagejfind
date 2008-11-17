@@ -1,7 +1,7 @@
 all: data/filter/fil_imagej_exec.so
 
 data/filter/fil_imagej_exec.so: src/fil_imagej_exec.c src/imagej-bin.h src/ijloader-bin.h src/diamond_filter-bin.h src/quick_tar.c src/quick_tar.h
-	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc -fPIC -O2 -g -m32 -Wall -shared -o $@ src/fil_imagej_exec.c src/quick_tar.c $$(pkg-config opendiamond --cflags) $$(pkg-config glib-2.0 --cflags --libs --static)
+	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc -fPIC -O2 -g -m32 -Wall -Wextra -shared -o $@ src/fil_imagej_exec.c src/quick_tar.c $$(pkg-config opendiamond --cflags) $$(pkg-config glib-2.0 --cflags --libs --static)
 
 
 src/imagej-bin.h: ij140.zip src/encapsulate

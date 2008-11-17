@@ -1,5 +1,5 @@
 /*
- * MATLABFind: A Diamond application for interoperating with MATLAB
+ * ImageJFind: A Diamond application for interoperating with ImageJ
  *
  * Copyright (c) 2006-2007 Carnegie Mellon University. All rights reserved.
  * Additional copyrights may be listed below.
@@ -342,7 +342,7 @@ ls_search_handle_t diamond_imagej_search(gdouble threshold,
   blob_data = mmap(NULL, blob_len, PROT_READ, MAP_PRIVATE, blob_fd, 0);
   g_assert(blob_data != MAP_FAILED);
 
-  // write out file for matlab search
+  // write out file for imagej search
   f = fdopen(fd, "a");
   g_return_val_if_fail(f, NULL);
   fprintf(f, "\n\n"

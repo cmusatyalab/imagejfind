@@ -1,5 +1,5 @@
 /*
- * MATLABFind: A Diamond application for interoperating with MATLAB
+ * ImageJFind: A Diamond application for interoperating with ImageJ
  *
  * Copyright (c) 2006-2007 Carnegie Mellon University. All rights reserved.
  * Additional copyrights may be listed below.

@@ -34,11 +34,9 @@ public:
 
 private:
 	char *		eval_function;
-	char *		init_function;
 	char *          threshold;
 	char *          source_folder;
 	GtkWidget       *eval_function_entry;
-	GtkWidget       *init_function_entry;
 	GtkWidget       *threshold_entry;
 	GtkWidget	*source_folder_button;
 

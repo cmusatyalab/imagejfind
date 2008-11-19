@@ -33,7 +33,6 @@
 /* config file tokens that we write out */
 #define SEARCH_NAME     "imagej_search"
 #define EVAL_FUNCTION_ID    "EVAL_FUNCTION"
-#define INIT_FUNCTION_ID    	"INIT_FUNCTION"
 #define THRESHOLD_ID "THRESHOLD"
 #define SOURCE_FOLDER_ID 	"SOURCE_FOLDER"
 
@@ -64,7 +63,6 @@ imagej_search::imagej_search(const char *name, char *descr)
 		: img_search(name, descr)
 {
 	eval_function = NULL;
-	init_function = NULL;
 	threshold = NULL;
 	source_folder = NULL;
 
@@ -77,9 +75,6 @@ imagej_search::~imagej_search()
 {
 	if (eval_function) {
 		free(eval_function);
-	}
-	if (init_function) {
-		free(init_function);
 	}
 	if (threshold) {
 		free(threshold);
@@ -102,11 +97,6 @@ imagej_search::handle_config(int nconf, char **data)
 		assert(nconf > 1);
 		eval_function = strdup(data[1]);
 		assert(eval_function != NULL);
-		err = 0;
-	} else if (strcmp(INIT_FUNCTION_ID, data[0]) == 0) {
-		assert(nconf > 1);
-		init_function = strdup(data[1]);
-		assert(init_function != NULL);
 		err = 0;
 	} else if (strcmp(THRESHOLD_ID, data[0]) == 0) {
 		assert(nconf > 1);
@@ -195,23 +185,13 @@ imagej_search::edit_search()
 	gtk_box_pack_start(GTK_BOX(box), table, FALSE, TRUE, 0);
 
 	/* set the first row label and text entry for the eval function */
-	widget = gtk_label_new("Eval function");
+	widget = gtk_label_new("Macro name");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
 	eval_function_entry = gtk_entry_new();
 	gtk_table_attach_defaults(GTK_TABLE(table), eval_function_entry, 1, 2, 0, 1);
 	if (eval_function != NULL) {
 		gtk_entry_set_text(GTK_ENTRY(eval_function_entry), eval_function);
-	}
-
-	/* set the second row label and text entry for the init function */
-	widget = gtk_label_new("Init function");
-	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
-	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 1, 2);
-	init_function_entry = gtk_entry_new();
-	gtk_table_attach_defaults(GTK_TABLE(table), init_function_entry, 1, 2, 1, 2);
-	if (init_function != NULL) {
-		gtk_entry_set_text(GTK_ENTRY(init_function_entry), init_function);
 	}
 
 	/* set the third row label and text entry for the threshold */
@@ -232,7 +212,7 @@ imagej_search::edit_search()
 							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
 	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 3, 4);
 	if (source_folder != NULL) {
-		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
+		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
 
 	/* make everything visible */
@@ -264,9 +244,6 @@ imagej_search::save_edits()
 	if (eval_function != NULL) {
 		free(eval_function);
 	}
-	if (init_function != NULL) {
-		free(init_function);
-	}
 	if (threshold != NULL) {
 		free(threshold);
 	}
@@ -276,8 +253,6 @@ imagej_search::save_edits()
 
 	eval_function = strdup(gtk_entry_get_text(GTK_ENTRY(eval_function_entry)));
 	assert(eval_function != NULL);
-	init_function = strdup(gtk_entry_get_text(GTK_ENTRY(init_function_entry)));
-	assert(init_function != NULL);
 	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
 	source_folder = strdup(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(source_folder_button)));
@@ -336,7 +311,6 @@ imagej_search::write_fspec(FILE *ostream)
 	fprintf(ostream, "EVAL_FUNCTION  f_eval_imagej_exec  # eval function \n");
 	fprintf(ostream, "INIT_FUNCTION  f_init_imagej_exec  # init function \n");
 	fprintf(ostream, "FINI_FUNCTION  f_fini_imagej_exec  # fini function \n");
-	fprintf(ostream, "ARG  %s\n", init_function );
 	fprintf(ostream, "ARG  %s\n", eval_function );
 	fprintf(ostream, "\n");
 	fprintf(ostream, "\n");
@@ -347,7 +321,6 @@ imagej_search::write_config(FILE *ostream, const char *dirname)
 {
  	fprintf(ostream, "SEARCH %s %s\n", SEARCH_NAME, get_name());
  	fprintf(ostream, "%s %s\n", EVAL_FUNCTION_ID, eval_function);
- 	fprintf(ostream, "%s %s \n", INIT_FUNCTION_ID, init_function);
  	fprintf(ostream, "%s %d \n", THRESHOLD_ID, threshold);
  	fprintf(ostream, "%s %d \n", SOURCE_FOLDER_ID, source_folder);
 }

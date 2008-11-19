@@ -7,5 +7,5 @@
 *.jar
 *.zip
 
-/src/*-bin.h
-/src/encapsulate
+/filter-code/*-bin.h
+/filter-code/encapsulate

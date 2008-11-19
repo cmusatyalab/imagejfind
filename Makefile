@@ -1,26 +1,27 @@
 IJZIP := ij141.zip
 
-all: fil_imagej_exec.so
+all: filter-code/fil_imagej_exec.so
 
-fil_imagej_exec.so: src/fil_imagej_exec.c src/imagej-bin.h src/ijloader-bin.h src/diamond_filter-bin.h src/quick_tar.c src/quick_tar.h
-	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc -fPIC -O2 -g -m32 -Wall -Wextra -shared -o $@ src/fil_imagej_exec.c src/quick_tar.c $$(pkg-config opendiamond --cflags) $$(pkg-config glib-2.0 --cflags --libs --static)
+filter-code/fil_imagej_exec.so: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h filter-code/quick_tar.c filter-code/quick_tar.h
+	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc -fPIC -O2 -g -m32 -Wall -Wextra -shared -o $@ filter-code/fil_imagej_exec.c filter-code/quick_tar.c $$(pkg-config opendiamond --cflags) $$(pkg-config glib-2.0 --cflags --libs --static)
 
 
-src/imagej-bin.h: $(IJZIP) src/encapsulate
-	./src/encapsulate imagej_bin < $< > $@
+filter-code/imagej-bin.h: $(IJZIP) filter-code/encapsulate
+	./filter-code/encapsulate imagej_bin < $< > $@
 
-src/ijloader-bin.h: ijloader.jar src/encapsulate
-	./src/encapsulate ijloader_bin < $< > $@
+filter-code/ijloader-bin.h: ijloader.jar filter-code/encapsulate
+	./filter-code/encapsulate ijloader_bin < $< > $@
 
-src/diamond_filter-bin.h: diamond_filter.jar src/encapsulate
-	./src/encapsulate diamond_filter_bin < $< > $@
+filter-code/diamond_filter-bin.h: diamond_filter.jar filter-code/encapsulate
+	./filter-code/encapsulate diamond_filter_bin < $< > $@
 
-src/encapsulate: src/encapsulate.c
+filter-code/encapsulate: filter-code/encapsulate.c
 	gcc -O2 -Wall -g $< -o $@
 
 
 clean:
-	$(RM) -r fil_imagej_exec.so src/*-bin.h src/encapsulate *.jar \
+	$(RM) -r filter-code/fil_imagej_exec.so filter-code/*-bin.h \
+		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin
 
 ij.jar: $(IJZIP)

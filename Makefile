@@ -2,7 +2,7 @@ CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra -Iquick-tar
 
 IJZIP := ij141.zip
 
-all: filter-code/fil_imagej_exec.so
+all: filter-code/fil_imagej_exec.so snapfind-plugin/imagej_search.so
 
 # quick tar
 quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
@@ -28,6 +28,7 @@ filter-code/encapsulate: filter-code/encapsulate.c
 
 ij.jar: $(IJZIP)
 	unzip -j -o $(IJZIP) ImageJ/$@
+	touch ij.jar
 
 ijloader.jar: ijloader/src/ijloader/IJLoader.java ij.jar
 	mkdir -p ijloader/bin
@@ -41,10 +42,13 @@ diamond_filter.jar: diamond_filter/src/Diamond_Filter.java ijloader.jar
 
 
 # snapfind plugin
+snapfind-plugin/imagej_search.so: snapfind-plugin/imagej_search.h snapfind-plugin/imagej_search.cc quick-tar/quick_tar.o
+	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/imagej_search.cc $$(pkg-config --cflags --libs gtk+-2.0 opendiamond)
 
 
+# clean
 clean:
 	$(RM) -r filter-code/fil_imagej_exec.so filter-code/*-bin.h \
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
-		quick-tar/*.o
+		quick-tar/*.o snapfind-plugin/*.so

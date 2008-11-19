@@ -54,7 +54,7 @@ search_init()
 	imagej_codec_factory *fac2;
 	fac2 = new imagej_codec_factory;
 	factory_register(fac);
-	factory_register_codec(fac2);  // also does codec
+	//	factory_register_codec(fac2);  // also does codec
 }
 
 

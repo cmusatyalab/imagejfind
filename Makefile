@@ -1,4 +1,6 @@
+INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra -Iquick-tar
+SNAPFIND_LIBDIR=/opt/snapfind/lib
 
 IJZIP := ij141.zip
 
@@ -52,3 +54,11 @@ clean:
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
 		quick-tar/*.o snapfind-plugin/*.so
+
+# install
+install: all snapfind-plugin/imagej.sf_conf
+	$(INSTALL) filter-code/*.so snapfind-plugin/*.so $(SNAPFIND_LIBDIR)
+	$(INSTALL) -m 644 snapfind-plugin/*.sf_conf $(SNAPFIND_LIBDIR)
+
+
+.DUMMY: all clean install

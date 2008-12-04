@@ -32,24 +32,14 @@ public class IJLoader {
 
     private static class IJLoaderOutputStream extends PrintStream {
 
-        private volatile boolean outputEmitted;
-
         private volatile boolean resultEmitted;
 
         public IJLoaderOutputStream(OutputStream out) {
             super(out);
         }
 
-        @Override
-        public void write(int i) {
-            outputEmitted = true;
-            if (i != 13) {
-                super.write(i);
-                super.flush();
-            }
-        }
-
         public void writeResult(String result) {
+            debugPrint("IJLoaderOutputStream writeResult: " + result);
             if (resultEmitted) {
                 // throw new IllegalStateException("Result already written");
                 System.err.println("warning: Result already written");
@@ -63,11 +53,10 @@ public class IJLoader {
         }
 
         public boolean getOutputEmitted() {
-            return outputEmitted;
+            return resultEmitted;
         }
 
         public void resetEmitted() {
-            outputEmitted = false;
             resultEmitted = false;
         }
     }

@@ -45,7 +45,7 @@ diamond_filter.jar: diamond_filter/src/Diamond_Filter.java ijloader.jar
 
 # snapfind plugin
 snapfind-plugin/imagej_search.so: snapfind-plugin/imagej_search.h snapfind-plugin/imagej_search.cc quick-tar/quick_tar.o
-	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/imagej_search.cc $$(pkg-config --cflags --libs gtk+-2.0 opendiamond) quick-tar/quick_tar.o
+	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/imagej_search.cc $$(pkg-config --cflags opendiamond) $$(pkg-config --cflags --libs gtk+-2.0) quick-tar/quick_tar.o
 
 
 # clean

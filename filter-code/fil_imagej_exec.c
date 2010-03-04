@@ -3,7 +3,7 @@
  *  A Diamond application for interoperating with ImageJ
  *  Version 1
  *
- *  Copyright (c) 2006-2008 Carnegie Mellon University
+ *  Copyright (c) 2006-2010 Carnegie Mellon University
  *  All Rights Reserved.
  *
  *  This software is distributed under the terms of the Eclipse Public
@@ -41,7 +41,7 @@
 #define IJLOADER_FILE "ijloader.jar"
 
 struct filter_instance {
-   int ij_pid;
+   GPid ij_pid;
    int ij_to_fd;
    int ij_from_fd;
    FILE *ij_to_file;
@@ -132,15 +132,16 @@ static double process_attrs_and_get_result(FILE *fp, lf_obj_handle_t ohandle)
   }
 }
 
+static void unblock_signals(gpointer user_data) {
+  sigset_t set;
+  g_assert(sigemptyset(&set) == 0);
+  g_assert(pthread_sigmask(SIG_SETMASK, &set, NULL) == 0);
+}
+
 int f_init_imagej_exec (int num_arg, char **args, int bloblen,
                         void *blob_data, const char *filter_name,
                         void **filter_args)
 {
-   int child_in_fd[2], child_out_fd[2];
-
-   pipe(child_in_fd);
-   pipe(child_out_fd);
-
    struct filter_instance *inst =
      (struct filter_instance *)malloc(sizeof(struct filter_instance));
 
@@ -191,32 +192,31 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    g_assert(untar_blob("macros", bloblen, (char *)blob_data) == 0);
 
    // go!
-   int child_pid = fork();
+   setenv("DISPLAY", "localhost:100", 1);
+   char *ij_args[] = { "/usr/bin/java", "-Djava.awt.headless=true", "-server",
+		       "-cp", "ij.jar:ijloader.jar:.",
+		       "ijloader.IJLoader", NULL };
 
-   if (child_pid == 0) {
-      close(child_in_fd[1]);
-      close(child_out_fd[0]);
-      dup2(child_in_fd[0], STDIN_FILENO);
-      dup2(child_out_fd[1], STDOUT_FILENO);
-
-      setenv("DISPLAY", "localhost:100", 1);
-
-      execlp("java", "java", "-server", "-cp", "ij.jar:ijloader.jar:.",
-             "ijloader.IJLoader", NULL);
-   } else {
-      close(child_in_fd[0]);
-      close(child_out_fd[1]);
-
-      inst->ij_pid = child_pid;
-      inst->ij_to_fd = child_in_fd[1];
-      inst->ij_from_fd = child_out_fd[0];
-      inst->ij_to_file = fdopen(inst->ij_to_fd, "w");
-      inst->ij_from_file = fdopen(inst->ij_from_fd, "r");
-      inst->macro_name = args[0];
-
-      *filter_args = inst;
-
+   GError *err = NULL;
+   g_spawn_async_with_pipes(NULL,
+			    ij_args,
+			    NULL, 0,
+			    unblock_signals, NULL,
+			    &inst->ij_pid,
+			    &inst->ij_to_fd,
+			    &inst->ij_from_fd,
+			    NULL,
+			    &err);
+   if (err != NULL) {
+     fprintf (stderr, "Unable to spawn: %s\n", err->message);
+     abort();
    }
+
+
+   inst->ij_to_file = fdopen(inst->ij_to_fd, "w");
+   inst->ij_from_file = fdopen(inst->ij_from_fd, "r");
+   inst->macro_name = args[0];
+   *filter_args = inst;
 
    return 0;
 }
@@ -232,11 +232,14 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    fflush(inst->ij_to_file);
    printf("New image + macro sent...\n");
    fflush(stdout);
-   
+
    double result = process_attrs_and_get_result(inst->ij_from_file, ohandle);
    lf_write_attr(ohandle, "_matlab_ans.double", sizeof(double), (unsigned char *)&result);
 
-   return (int)(result);
+   int int_result = (int) result;
+   printf("int_result: %d\n", int_result);
+
+   return int_result;
 }
 
 int f_fini_imagej_exec (void *filter_args)
@@ -245,7 +248,7 @@ int f_fini_imagej_exec (void *filter_args)
 
    int status;
    kill(inst->ij_pid, SIGKILL);
-   waitpid(inst->ij_pid, &status, 0);
+   g_spawn_close_pid(inst->ij_pid);
 
    fclose(inst->ij_to_file);
    fclose(inst->ij_from_file);
@@ -253,8 +256,8 @@ int f_fini_imagej_exec (void *filter_args)
    close(inst->ij_from_fd);
    free(inst->macro_name);
 
-   char *spawn_args[] = { "rm", "-rf", inst->dirname, NULL };
-   g_assert(g_spawn_sync(NULL, spawn_args, NULL,
+   char *rm_args[] = { "rm", "-rf", inst->dirname, NULL };
+   g_assert(g_spawn_sync(NULL, rm_args, NULL,
 			 G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
 			 G_SPAWN_STDERR_TO_DEV_NULL,
 			 NULL, NULL, NULL, NULL, NULL, NULL));

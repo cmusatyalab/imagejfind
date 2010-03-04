@@ -34,12 +34,12 @@ ij.jar: $(IJZIP)
 
 ijloader.jar: ijloader/src/ijloader/IJLoader.java ij.jar
 	mkdir -p ijloader/bin
-	javac -target 1.5 -cp ij.jar -d ijloader/bin $<
+	javac -source 1.5 -target 1.5 -cp ij.jar -d ijloader/bin $<
 	jar cf $@ -C ijloader/bin/ .
 
 diamond_filter.jar: diamond_filter/src/Diamond_Filter.java ijloader.jar
 	mkdir -p diamond_filter/bin
-	javac -target 1.5 -cp ij.jar:ijloader.jar -d diamond_filter/bin $<
+	javac -source 1.5 -target 1.5 -cp ij.jar:ijloader.jar -d diamond_filter/bin $<
 	jar cf $@ -C diamond_filter/bin/ .
 
 

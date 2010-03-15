@@ -246,7 +246,6 @@ int f_fini_imagej_exec (void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
 
-   int status;
    kill(inst->ij_pid, SIGKILL);
    g_spawn_close_pid(inst->ij_pid);
 

@@ -17,7 +17,6 @@ package ijloader;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
-import ij.io.Opener;
 import ij.macro.Interpreter;
 import ij.measure.ResultsTable;
 import ij.text.TextWindow;
@@ -108,7 +107,7 @@ public class IJLoader {
             fos.close();
         }
 
-        new Opener().open(tmp.getPath());
+        IJ.open(tmp.getPath());
 
         tmp.delete();
 

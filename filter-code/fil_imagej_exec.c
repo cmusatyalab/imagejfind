@@ -32,6 +32,8 @@
 #include "quick_tar.h"
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <errno.h>
 #include "imagej-bin.h"
 #include "ijloader-bin.h"
 #include "diamond_filter-bin.h"
@@ -42,8 +44,6 @@
 
 struct filter_instance {
    GPid ij_pid;
-   int ij_to_fd;
-   int ij_from_fd;
    FILE *ij_to_file;
    FILE *ij_from_file;
    char *macro_name;
@@ -132,16 +132,137 @@ static double process_attrs_and_get_result(FILE *fp, lf_obj_handle_t ohandle)
   }
 }
 
-static void unblock_signals(gpointer user_data) {
-  sigset_t set;
-  g_assert(sigemptyset(&set) == 0);
-  g_assert(pthread_sigmask(SIG_SETMASK, &set, NULL) == 0);
+static int signal_pipe;
+static pthread_mutex_t signal_pipe_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// used in the child of the fork to ignore sigusr1 so that the xserver
+// will send us sigusr1 when it is ready (per xinit.c)
+static void ignore_sigusr1(gpointer user_data)
+{
+  struct sigaction action;
+  memset(&action, 0, sizeof action);
+  action.sa_handler = SIG_IGN;
+
+  sigaction(SIGUSR1, &action, NULL);
+}
+
+static void sigchld(int sig)
+{
+  pthread_mutex_lock(&signal_pipe_mutex);
+  int fd = signal_pipe;
+  pthread_mutex_unlock(&signal_pipe_mutex);
+
+  // FAIL!
+  int status;
+  while (true) {
+    status = write(fd, "f", 1);
+    if (status == -1 && errno != EINTR) {
+      perror("write in sigchld");
+      abort();
+    } else if (status == 1) {
+      break;
+    }
+  }
+  wait(&status);
+}
+
+static void sigusr1(int sig)
+{
+  pthread_mutex_lock(&signal_pipe_mutex);
+  int fd = signal_pipe;
+  pthread_mutex_unlock(&signal_pipe_mutex);
+
+  // WIN!
+  int status;
+  while (true) {
+    status = write(fd, "w", 1);
+    if (status == -1 && errno != EINTR) {
+      perror("write in sigusr1");
+      abort();
+    } else if (status == 1) {
+      break;
+    }
+  }
+}
+
+
+static int start_x_server(void)
+{
+  // create self-pipe
+  int pipefd[2];
+  pipe(pipefd);
+
+  pthread_mutex_lock(&signal_pipe_mutex);
+  signal_pipe = pipefd[1];
+  pthread_mutex_unlock(&signal_pipe_mutex);
+
+  // register signal handlers
+  struct sigaction action;
+  memset(&action, 0, sizeof action);
+
+  action.sa_handler = sigchld;
+  sigaction(SIGCHLD, &action, NULL);
+
+  action.sa_handler = sigusr1;
+  sigaction(SIGUSR1, &action, NULL);
+
+  int i;
+  for (i = 0; i < 10000; i++) {
+    printf("Trying DISPLAY :%d\n", i);
+
+    char *display_str = g_strdup_printf(":%d", i);
+    char *args[] = { "/usr/bin/Xvfb", display_str, "-terminate", NULL };
+    g_spawn_async(NULL, args, NULL,
+		  G_SPAWN_DO_NOT_REAP_CHILD,
+		  ignore_sigusr1, NULL, NULL, NULL);
+    g_free(display_str);
+
+    char result;
+    int status;
+    while (true) {
+      status = read(pipefd[0], &result, 1);
+      fprintf(stderr, "result: %d\n", (int) result);
+      if (status == -1 && errno != EINTR) {
+	perror("read from pipe");
+	abort();
+      } else if (status == 1) {
+	break;
+      }
+    }
+
+
+    switch (result) {
+    case 'f':
+      // FAIL
+      // go around again
+      //      printf("FAIL\n");
+      break;
+
+    case 'w':
+      // WIN
+      //      printf("WIN\n");
+      action.sa_handler = SIG_DFL;
+      sigaction(SIGCHLD, &action, NULL);
+      sigaction(SIGUSR1, &action, NULL);
+
+      close(pipefd[0]);
+      close(pipefd[1]);
+      return i;
+
+    default:
+      abort();
+    }
+  }
+
+  abort();
 }
 
 int f_init_imagej_exec (int num_arg, char **args, int bloblen,
                         void *blob_data, const char *filter_name,
                         void **filter_args)
 {
+   g_assert(num_arg == 1);
+
    struct filter_instance *inst =
      (struct filter_instance *)malloc(sizeof(struct filter_instance));
 
@@ -191,20 +312,28 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    g_assert(chdir("..") == 0);
    g_assert(untar_blob("macros", bloblen, (char *)blob_data) == 0);
 
+   // start X server?!
+   int display = start_x_server();
+   char *display_str = g_strdup_printf("localhost:%d", display);
+   setenv("DISPLAY", display_str, 1);
+   printf("DISPLAY=%s\n", display_str);
+   g_free(display_str);
+
    // go!
-   setenv("DISPLAY", "localhost:100", 1);
-   char *ij_args[] = { "/usr/bin/java", "-Djava.awt.headless=true", "-server",
+   char *ij_args[] = { "/usr/bin/java", "-server",
 		       "-cp", "ij.jar:ijloader.jar:.",
 		       "ijloader.IJLoader", NULL };
 
    GError *err = NULL;
+   int to_fd;
+   int from_fd;
    g_spawn_async_with_pipes(NULL,
 			    ij_args,
 			    NULL, 0,
-			    unblock_signals, NULL,
+			    NULL, NULL,
 			    &inst->ij_pid,
-			    &inst->ij_to_fd,
-			    &inst->ij_from_fd,
+			    &to_fd,
+			    &from_fd,
 			    NULL,
 			    &err);
    if (err != NULL) {
@@ -213,8 +342,8 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    }
 
 
-   inst->ij_to_file = fdopen(inst->ij_to_fd, "w");
-   inst->ij_from_file = fdopen(inst->ij_from_fd, "r");
+   inst->ij_to_file = fdopen(to_fd, "w");
+   inst->ij_from_file = fdopen(from_fd, "r");
    inst->macro_name = args[0];
    *filter_args = inst;
 
@@ -251,8 +380,6 @@ int f_fini_imagej_exec (void *filter_args)
 
    fclose(inst->ij_to_file);
    fclose(inst->ij_from_file);
-   close(inst->ij_to_fd);
-   close(inst->ij_from_fd);
    free(inst->macro_name);
 
    char *rm_args[] = { "rm", "-rf", inst->dirname, NULL };

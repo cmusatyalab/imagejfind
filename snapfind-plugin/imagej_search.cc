@@ -293,7 +293,8 @@ imagej_search::save_edits()
 	set_auxiliary_data_length(blob_len);
 	//	printf(" blob length: %d\n", blob_len);
 
-	return;
+	// save name
+	img_search::save_edits();
 }
 
 

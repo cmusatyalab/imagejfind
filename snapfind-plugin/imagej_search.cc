@@ -191,16 +191,7 @@ imagej_search::edit_search()
 	eval_function_entry = gtk_entry_new();
 	gtk_table_attach_defaults(GTK_TABLE(table), eval_function_entry, 1, 2, 0, 1);
 	if (eval_function != NULL) {
-		char *s = strdup(eval_function);
-
-		// convert '_' to ' '
-		for (int i = 0; i < strlen(s); i++) {
-			if (s[i] == '_') {
-				s[i] = ' ';
-			}
-		}
-		gtk_entry_set_text(GTK_ENTRY(eval_function_entry), s);
-		free(s);
+		gtk_entry_set_text(GTK_ENTRY(eval_function_entry), eval_function);
 	}
 
 	/* set the third row label and text entry for the threshold */
@@ -262,14 +253,6 @@ imagej_search::save_edits()
 
 	eval_function = strdup(gtk_entry_get_text(GTK_ENTRY(eval_function_entry)));
 	assert(eval_function != NULL);
-
-	// convert ' ' to '_'
-	for (int i = 0; i < strlen(eval_function); i++) {
-	  if (eval_function[i] == ' ') {
-	    eval_function[i] = '_';
-	  }
-	}
-
 
 	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);

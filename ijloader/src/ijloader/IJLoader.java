@@ -126,6 +126,7 @@ public class IJLoader {
 
         specialOut.resetEmitted();
 
+        Interpreter.batchMode = true;
         String macroResult = IJ.runMacroFile(macroName);
         debugPrint("macroResult: " + macroResult);
 

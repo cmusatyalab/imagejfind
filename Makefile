@@ -2,7 +2,7 @@ INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra -Iquick-tar
 SNAPFIND_LIBDIR=/opt/snapfind/lib
 
-IJZIP := ij141.zip
+IJZIP := ij143.zip
 
 all: filter-code/fil_imagej_exec.so snapfind-plugin/imagej_search.so
 

@@ -64,7 +64,7 @@ imagej_search::imagej_search(const char *name, char *descr)
 {
 	eval_function = strdup("eval");
 	threshold = strdup("0");
-	source_folder = strdup(".");
+	source_folder = NULL;
 
 	edit_window = NULL;
 
@@ -212,7 +212,7 @@ imagej_search::edit_search()
 							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
 	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 3, 4);
 	if (source_folder != NULL) {
-		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(source_folder_button), source_folder);
+		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
 
 	/* make everything visible */
@@ -236,6 +236,7 @@ imagej_search::save_edits()
 	gchar *name_used;
 	gboolean success;
 	gchar *blob_data;
+	gchar *tmp;
 
 	if (edit_window == NULL) {
 		return;
@@ -256,7 +257,7 @@ imagej_search::save_edits()
 
 	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
-	source_folder = strdup(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(source_folder_button)));
+	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
 	assert(source_folder != NULL);
 
 	/* blob */
@@ -266,7 +267,9 @@ imagej_search::save_edits()
 	g_assert(fd >= 0);
 
 	//	printf("quick tar: %s\n", source_folder);
-	blob_len = tar_blob(source_folder, fd);
+	tmp = g_filename_from_uri(source_folder, NULL, NULL);
+	blob_len = tar_blob(tmp, fd);
+	g_free(tmp);
 	g_assert(blob_len >= 0);
 
 	success = g_file_get_contents(name_used, &blob_data, NULL, NULL);
@@ -324,7 +327,10 @@ imagej_search::write_config(FILE *ostream, const char *dirname)
  	fprintf(ostream, "SEARCH %s %s\n", SEARCH_NAME, get_name());
  	fprintf(ostream, "%s %s\n", EVAL_FUNCTION_ID, eval_function);
  	fprintf(ostream, "%s %s \n", THRESHOLD_ID, threshold);
- 	fprintf(ostream, "%s %s \n", SOURCE_FOLDER_ID, source_folder);
+
+	if (source_folder != NULL) {
+	 	fprintf(ostream, "%s %s \n", SOURCE_FOLDER_ID, source_folder);
+	}
 }
 
 /* Region match isn't meaningful for this search */

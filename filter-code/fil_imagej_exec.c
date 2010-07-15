@@ -344,7 +344,12 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
 
    inst->ij_to_file = fdopen(to_fd, "w");
    inst->ij_from_file = fdopen(from_fd, "r");
-   inst->macro_name = args[0];
+
+   gsize len;
+   char *tmp = (char *) g_base64_decode(args[0], &len);
+   g_assert(tmp[len-1] == '\0');
+   inst->macro_name = strdup(tmp);
+   g_free(tmp);
    *filter_args = inst;
 
    return 0;

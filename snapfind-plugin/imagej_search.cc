@@ -94,9 +94,14 @@ imagej_search::handle_config(int nconf, char **data)
 	int	err;
 
 	if (strcmp(EVAL_FUNCTION_ID, data[0]) == 0) {
+		gsize	len;
+		char	*tmp;
+
 		assert(nconf > 1);
-		eval_function = strdup(data[1]);
-		assert(eval_function != NULL);
+		tmp = (char *) g_base64_decode(data[1], &len);
+		assert(tmp[len-1] == '\0');
+		eval_function = strdup(tmp);
+		g_free(tmp);
 		err = 0;
 	} else if (strcmp(THRESHOLD_ID, data[0]) == 0) {
 		assert(nconf > 1);
@@ -303,6 +308,8 @@ imagej_search::close_edit_win()
 void
 imagej_search::write_fspec(FILE *ostream)
 {
+	gchar *b64_tmp;
+
 	if (strcmp("RGB", get_name()) == 0) {
 		fprintf(ostream, "FILTER  RGB\n");
 	} else {
@@ -316,7 +323,11 @@ imagej_search::write_fspec(FILE *ostream)
 	fprintf(ostream, "EVAL_FUNCTION  f_eval_imagej_exec  # eval function \n");
 	fprintf(ostream, "INIT_FUNCTION  f_init_imagej_exec  # init function \n");
 	fprintf(ostream, "FINI_FUNCTION  f_fini_imagej_exec  # fini function \n");
-	fprintf(ostream, "ARG  %s\n", eval_function );
+
+	b64_tmp = g_base64_encode((const guchar *) eval_function, strlen(eval_function) + 1);
+	fprintf(ostream, "ARG  %s\n", b64_tmp);
+	g_free(b64_tmp);
+
 	fprintf(ostream, "\n");
 	fprintf(ostream, "\n");
 }
@@ -324,8 +335,14 @@ imagej_search::write_fspec(FILE *ostream)
 void
 imagej_search::write_config(FILE *ostream, const char *dirname)
 {
+	gchar *b64_tmp;
+
  	fprintf(ostream, "SEARCH %s %s\n", SEARCH_NAME, get_name());
- 	fprintf(ostream, "%s %s\n", EVAL_FUNCTION_ID, eval_function);
+
+	b64_tmp = g_base64_encode((const guchar *) eval_function, strlen(eval_function) + 1);
+ 	fprintf(ostream, "%s %s\n", EVAL_FUNCTION_ID, b64_tmp);
+	g_free(b64_tmp);
+
  	fprintf(ostream, "%s %s \n", THRESHOLD_ID, threshold);
 
 	if (source_folder != NULL) {

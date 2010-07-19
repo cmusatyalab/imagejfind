@@ -2,7 +2,7 @@ INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra -Iquick-tar
 SNAPFIND_LIBDIR=/opt/snapfind/lib
 
-IJZIP := ij143.zip
+IJZIP := ij-latest.zip
 
 all: filter-code/fil_imagej_exec.so snapfind-plugin/imagej_search.so
 
@@ -14,6 +14,8 @@ quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
 filter-code/fil_imagej_exec.so: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h quick-tar/quick_tar.o
 	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc $(CFLAGS) -shared -o $@ filter-code/fil_imagej_exec.c quick-tar/quick_tar.o $$(pkg-config opendiamond --cflags) $$(pkg-config glib-2.0 --cflags --libs --static)
 
+$(IJZIP):
+	./get-latest-imagej.py
 
 filter-code/imagej-bin.h: $(IJZIP) filter-code/encapsulate
 	./filter-code/encapsulate imagej_bin < $< > $@
@@ -53,7 +55,8 @@ clean:
 	$(RM) -r filter-code/fil_imagej_exec.so filter-code/*-bin.h \
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
-		quick-tar/*.o snapfind-plugin/*.so
+		quick-tar/*.o snapfind-plugin/*.so \
+		$(IJZIP)
 
 # install
 install: all snapfind-plugin/imagej.sf_conf

@@ -4,7 +4,7 @@
  *  Version 1
  *
  *  Copyright (c) 2002-2005 Intel Corporation
- *  Copyright (c) 2008 Carnegie Mellon University
+ *  Copyright (c) 2008, 2010 Carnegie Mellon University
  *  All Rights Reserved.
  *
  *  This software is distributed under the terms of the Eclipse Public

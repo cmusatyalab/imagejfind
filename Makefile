@@ -55,8 +55,7 @@ clean:
 	$(RM) -r filter-code/fil_imagej_exec.so filter-code/*-bin.h \
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
-		quick-tar/*.o snapfind-plugin/*.so \
-		$(IJZIP)
+		quick-tar/*.o snapfind-plugin/*.so
 
 # install
 install: all snapfind-plugin/imagej.sf_conf

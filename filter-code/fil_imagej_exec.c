@@ -320,7 +320,7 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    g_free(display_str);
 
    // go!
-   char *ij_args[] = { "/usr/bin/java", "-server",
+   char *ij_args[] = { "java", "-server",
 		       "-cp", "ij.jar:ijloader.jar:.",
 		       "ijloader.IJLoader", NULL };
 
@@ -329,7 +329,7 @@ int f_init_imagej_exec (int num_arg, char **args, int bloblen,
    int from_fd;
    g_spawn_async_with_pipes(NULL,
 			    ij_args,
-			    NULL, 0,
+			    NULL, G_SPAWN_SEARCH_PATH,
 			    NULL, NULL,
 			    &inst->ij_pid,
 			    &to_fd,

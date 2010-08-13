@@ -15,7 +15,7 @@ filter-code/fil_imagej_exec.so: filter-code/fil_imagej_exec.c filter-code/imagej
 	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc $(CFLAGS) -shared -o $@ filter-code/fil_imagej_exec.c quick-tar/quick_tar.o $$(pkg-config opendiamond --cflags) $$(pkg-config glib-2.0 --cflags --libs --static)
 
 $(IJZIP):
-	./get-latest-imagej.py
+	$(error Run "python get-latest-imagej.py" to get $(IJZIP))
 
 filter-code/imagej-bin.h: $(IJZIP) filter-code/encapsulate
 	./filter-code/encapsulate imagej_bin < $< > $@

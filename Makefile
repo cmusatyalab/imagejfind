@@ -14,6 +14,10 @@ quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
 filter-code/fil_imagej_exec.so: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h quick-tar/quick_tar.o
 	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc $(CFLAGS) -shared -o $@ filter-code/fil_imagej_exec.c quick-tar/quick_tar.o $$(pkg-config opendiamond --cflags) $$(pkg-config glib-2.0 --cflags --libs --static)
 
+# don't remove ij.jar dependency, the version string is inlined at compile time
+PrintImageJVersion.class: ij.jar
+	javac -classpath ij.jar PrintImageJVersion.java
+
 $(IJZIP):
 	$(error Run "python get-latest-imagej.py" to get $(IJZIP))
 
@@ -46,8 +50,8 @@ diamond_filter.jar: diamond_filter/src/Diamond_Filter.java ijloader.jar
 
 
 # snapfind plugin
-snapfind-plugin/imagej_search.so: snapfind-plugin/imagej_search.h snapfind-plugin/imagej_search.cc quick-tar/quick_tar.o
-	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/imagej_search.cc $$(pkg-config --cflags opendiamond) $$(pkg-config --cflags --libs gtk+-2.0) quick-tar/quick_tar.o
+snapfind-plugin/imagej_search.so: snapfind-plugin/imagej_search.h snapfind-plugin/imagej_search.cc quick-tar/quick_tar.o PrintImageJVersion.class
+	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/imagej_search.cc $$(pkg-config --cflags opendiamond) $$(pkg-config --cflags --libs gtk+-2.0) quick-tar/quick_tar.o -DIMAGEJ_VERSION=\"$(shell java PrintImageJVersion)\"
 
 
 # clean
@@ -55,7 +59,7 @@ clean:
 	$(RM) -r filter-code/fil_imagej_exec.so filter-code/*-bin.h \
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
-		quick-tar/*.o snapfind-plugin/*.so
+		quick-tar/*.o snapfind-plugin/*.so *.class
 
 # install
 install: all snapfind-plugin/imagej.sf_conf

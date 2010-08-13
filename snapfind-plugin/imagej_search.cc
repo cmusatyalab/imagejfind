@@ -220,6 +220,11 @@ imagej_search::edit_search()
 		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
 
+	/* show the ImageJ version */
+	widget = gtk_label_new("ImageJ version " IMAGEJ_VERSION);
+	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
+	gtk_box_pack_start(GTK_BOX(box), widget, FALSE, TRUE, 0);
+
 	/* make everything visible */
 	gtk_widget_show_all(edit_window);
 

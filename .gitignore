@@ -4,6 +4,7 @@
 *.so
 *.a
 
+*.class
 *.jar
 *.zip
 

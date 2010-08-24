@@ -84,6 +84,8 @@ public class IJLoader {
 
     private static void innerLoop(InputStream in,
             IJLoaderOutputStream specialOut) throws IOException {
+        Interpreter.batchMode = true;
+
         debugPrint("Reading image...");
 
         specialOut.println("BEGIN");
@@ -126,7 +128,6 @@ public class IJLoader {
 
         specialOut.resetEmitted();
 
-        Interpreter.batchMode = true;
         String macroResult = IJ.runMacroFile(macroName);
         debugPrint("macroResult: " + macroResult);
 

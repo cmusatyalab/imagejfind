@@ -16,6 +16,7 @@
 
 #include "lib_filter.h"
 
+#include <pthread.h>
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -52,7 +53,7 @@ struct filter_instance {
 
 static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
 {
-   unsigned char *obj_data;
+   const void *obj_data;
    size_t data_len;
 
    lf_ref_attr(ohandle, "", &data_len, &obj_data);
@@ -257,8 +258,8 @@ static int start_x_server(void)
   abort();
 }
 
-int f_init_imagej_exec (int num_arg, char **args, int bloblen,
-                        void *blob_data, const char *filter_name,
+int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
+                        const void *blob_data, const char *filter_name,
                         void **filter_args)
 {
    g_assert(num_arg == 1);

@@ -136,6 +136,68 @@ cb_close_edit_window(GtkWidget* item, gpointer data)
 	search->close_edit_win();
 }
 
+static void
+cb_choose_folder(GtkFileChooser* item, gpointer data)
+{
+	imagej_search *    search;
+	search = (imagej_search *)data;
+	search->populate_macro_menu();
+}
+
+void
+imagej_search::populate_macro_menu()
+{
+	char *uri;
+	char *dirpath;
+	GDir *dir;
+	const gchar *name;
+	char *path;
+	GList *names = NULL;
+	GList *cur;
+	char *initial_func;
+
+	/* Determine which item to select initially */
+	initial_func = gtk_combo_box_get_active_text(GTK_COMBO_BOX(eval_function_menu));
+	if (initial_func == NULL) {
+		initial_func = g_strdup(eval_function);
+	}
+
+	/* Purge existing menu */
+	for (; eval_function_menu_length; eval_function_menu_length--) {
+		gtk_combo_box_remove_text(GTK_COMBO_BOX(eval_function_menu), 0);
+	}
+
+	/* Gather a list of files in the source folder */
+	uri = gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button));
+	dirpath = uri ? g_filename_from_uri(uri, NULL, NULL) : NULL;
+	g_free(uri);
+	dir = g_dir_open(dirpath, 0, NULL);
+	if (dir != NULL) {
+		while ((name = g_dir_read_name(dir))) {
+			path = g_strdup_printf("%s/%s", dirpath, name);
+			if (name[0] != '.' && g_file_test(path, G_FILE_TEST_IS_REGULAR)) {
+				names = g_list_prepend(names, g_strdup(name));
+			}
+			g_free(path);
+		}
+		g_dir_close(dir);
+	}
+	g_free(dirpath);
+	names = g_list_sort(names, (GCompareFunc) strcmp);
+
+	/* Populate the menu */
+	gtk_combo_box_set_active(GTK_COMBO_BOX(eval_function_menu), -1);
+	for (cur = g_list_first(names); cur; cur = g_list_next(cur)) {
+		gtk_combo_box_append_text(GTK_COMBO_BOX(eval_function_menu), (char *) cur->data);
+		if (!g_strcmp0((char *) cur->data, initial_func)) {
+			gtk_combo_box_set_active(GTK_COMBO_BOX(eval_function_menu), eval_function_menu_length);
+		}
+		eval_function_menu_length++;
+		g_free(cur->data);
+	}
+	g_list_free(names);
+	g_free(initial_func);
+}
 
 void
 imagej_search::edit_search()
@@ -189,15 +251,27 @@ imagej_search::edit_search()
         gtk_container_set_border_width(GTK_CONTAINER(table), 10);
 	gtk_box_pack_start(GTK_BOX(box), table, FALSE, TRUE, 0);
 
-	/* set the first row label and text entry for the eval function */
-	widget = gtk_label_new("Macro name");
+	/* set the first row label and file chooser button for the source directory */
+	widget = gtk_label_new("Source folder");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
-	eval_function_entry = gtk_entry_new();
-	gtk_table_attach_defaults(GTK_TABLE(table), eval_function_entry, 1, 2, 0, 1);
-	if (eval_function != NULL) {
-		gtk_entry_set_text(GTK_ENTRY(eval_function_entry), eval_function);
+	source_folder_button = gtk_file_chooser_button_new("Select a Folder",
+							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 0, 1);
+	g_signal_connect(G_OBJECT(source_folder_button), "selection-changed",
+	                 G_CALLBACK(cb_choose_folder), this);
+	if (source_folder != NULL) {
+		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
+
+	/* set the second row label and popup menu for the eval function */
+	widget = gtk_label_new("Macro");
+	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
+	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 1, 2);
+	eval_function_menu = gtk_combo_box_new_text();
+	eval_function_menu_length = 0;
+	gtk_table_attach_defaults(GTK_TABLE(table), eval_function_menu, 1, 2, 1, 2);
+	populate_macro_menu();
 
 	/* set the third row label and text entry for the threshold */
 	widget = gtk_label_new("Threshold");
@@ -207,17 +281,6 @@ imagej_search::edit_search()
 	gtk_table_attach_defaults(GTK_TABLE(table), threshold_entry, 1, 2, 2, 3);
 	if (threshold != NULL) {
 		gtk_entry_set_text(GTK_ENTRY(threshold_entry), threshold);
-	}
-
-	/* set the fourth row label and file chooser button for the source directory */
-        widget = gtk_label_new("Source folder");
-	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
-	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 3, 4);
-	source_folder_button = gtk_file_chooser_button_new("Select a Folder",
-							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
-	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 3, 4);
-	if (source_folder != NULL) {
-		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
 
 	/* show the ImageJ version */
@@ -262,9 +325,9 @@ imagej_search::save_edits()
 		free(source_folder);
 	}
 
-	eval_function = strdup(gtk_entry_get_text(GTK_ENTRY(eval_function_entry)));
-	assert(eval_function != NULL);
-
+	tmp = gtk_combo_box_get_active_text(GTK_COMBO_BOX(eval_function_menu));
+	eval_function = strdup(tmp ?: "");
+	g_free(tmp);
 	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
 	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));

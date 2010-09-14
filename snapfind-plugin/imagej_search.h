@@ -31,12 +31,14 @@ public:
 	void	close_edit_win();
 	bool	is_editable();
 	virtual void 	region_match(RGBImage *img, bbox_list_t *blist);
+	void	populate_macro_menu();
 
 private:
 	char *		eval_function;
 	char *          threshold;
 	char *          source_folder;
-	GtkWidget       *eval_function_entry;
+	GtkWidget       *eval_function_menu;
+	unsigned	eval_function_menu_length;
 	GtkWidget       *threshold_entry;
 	GtkWidget	*source_folder_button;
 

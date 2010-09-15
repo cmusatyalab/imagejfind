@@ -62,8 +62,8 @@ search_init()
 imagej_search::imagej_search(const char *name, char *descr)
 		: img_search(name, descr)
 {
-	eval_function = strdup("eval");
-	threshold = strdup("0");
+	eval_function = g_strdup("eval");
+	threshold = g_strdup("0");
 	source_folder = NULL;
 
 	edit_window = NULL;
@@ -74,13 +74,13 @@ imagej_search::imagej_search(const char *name, char *descr)
 imagej_search::~imagej_search()
 {
 	if (eval_function) {
-		free(eval_function);
+		g_free(eval_function);
 	}
 	if (threshold) {
-		free(threshold);
+		g_free(threshold);
 	}
 	if (source_folder) {
-		free(source_folder);
+		g_free(source_folder);
 	}
 
 	g_free(get_auxiliary_data());
@@ -95,22 +95,19 @@ imagej_search::handle_config(int nconf, char **data)
 
 	if (strcmp(EVAL_FUNCTION_ID, data[0]) == 0) {
 		gsize	len;
-		char	*tmp;
 
 		assert(nconf > 1);
-		tmp = (char *) g_base64_decode(data[1], &len);
-		assert(tmp[len-1] == '\0');
-		eval_function = strdup(tmp);
-		g_free(tmp);
+		eval_function = (char *) g_base64_decode(data[1], &len);
+		assert(eval_function[len-1] == '\0');
 		err = 0;
 	} else if (strcmp(THRESHOLD_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		threshold = strdup(data[1]);
+		threshold = g_strdup(data[1]);
 		assert(threshold != NULL);
 		err = 0;
 	} else if (strcmp(SOURCE_FOLDER_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		source_folder = strdup(data[1]);
+		source_folder = g_strdup(data[1]);
 		assert(source_folder != NULL);
 		err = 0;
 	} else {
@@ -316,21 +313,22 @@ imagej_search::save_edits()
 	}
 
 	if (eval_function != NULL) {
-		free(eval_function);
+		g_free(eval_function);
 	}
 	if (threshold != NULL) {
-		free(threshold);
+		g_free(threshold);
 	}
 	if (source_folder != NULL) {
-		free(source_folder);
+		g_free(source_folder);
 	}
 
-	tmp = gtk_combo_box_get_active_text(GTK_COMBO_BOX(eval_function_menu));
-	eval_function = strdup(tmp ?: "");
-	g_free(tmp);
-	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
+	eval_function = gtk_combo_box_get_active_text(GTK_COMBO_BOX(eval_function_menu));
+	if (eval_function == NULL) {
+		eval_function = g_strdup("");
+	}
+	threshold = g_strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
-	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
+	source_folder = g_strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
 	assert(source_folder != NULL);
 
 	/* blob */

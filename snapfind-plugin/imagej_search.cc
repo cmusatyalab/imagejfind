@@ -186,7 +186,7 @@ imagej_search::populate_macro_menu()
 	gtk_combo_box_set_active(GTK_COMBO_BOX(eval_function_menu), -1);
 	for (cur = g_list_first(names); cur; cur = g_list_next(cur)) {
 		gtk_combo_box_append_text(GTK_COMBO_BOX(eval_function_menu), (char *) cur->data);
-		if (!g_strcmp0((char *) cur->data, initial_func)) {
+		if (initial_func != NULL && !strcmp((char *) cur->data, initial_func)) {
 			gtk_combo_box_set_active(GTK_COMBO_BOX(eval_function_menu), eval_function_menu_length);
 		}
 		eval_function_menu_length++;

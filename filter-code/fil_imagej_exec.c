@@ -3,7 +3,7 @@
  *  A Diamond application for interoperating with ImageJ
  *  Version 1
  *
- *  Copyright (c) 2006-2010 Carnegie Mellon University
+ *  Copyright (c) 2006-2011 Carnegie Mellon University
  *  All Rights Reserved.
  *
  *  This software is distributed under the terms of the Eclipse Public
@@ -48,7 +48,7 @@ struct filter_instance {
    FILE *ij_to_file;
    FILE *ij_from_file;
    char *macro_name;
-   char *dirname;
+   gchar *dirname;
 };
 
 static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
@@ -267,18 +267,17 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
    struct filter_instance *inst =
      (struct filter_instance *)malloc(sizeof(struct filter_instance));
 
-   char temp_dir[] = P_tmpdir "/imagejfindXXXXXX";
-   if (mkdtemp(temp_dir) == NULL) {
+   inst->dirname = g_strdup_printf("%s/imagejfindXXXXXX", g_get_tmp_dir());
+
+   if (mkdtemp(inst->dirname) == NULL) {
      perror("Could not create temporary directory");
      exit(0);
    }
 
-   if (chdir(temp_dir) < 0) {
+   if (chdir(inst->dirname) < 0) {
      perror("Could not enter ImageJ directory");
      exit(0);
    }
-
-   inst->dirname = strdup(temp_dir);
 
    // write ImageJ
    g_assert(g_file_set_contents(IMAGEJ_FILE,
@@ -394,7 +393,7 @@ int f_fini_imagej_exec (void *filter_args)
 			 G_SPAWN_STDERR_TO_DEV_NULL,
 			 NULL, NULL, NULL, NULL, NULL, NULL));
 
-   free(inst->dirname);
+   g_free(inst->dirname);
 
    free(inst);
 

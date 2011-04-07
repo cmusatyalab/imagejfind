@@ -44,11 +44,9 @@
 #define IJLOADER_FILE "ijloader.jar"
 
 struct filter_instance {
-   GPid ij_pid;
    FILE *ij_to_file;
    FILE *ij_from_file;
    char *macro_name;
-   gchar *dirname;
 };
 
 static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
@@ -267,17 +265,19 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
    struct filter_instance *inst =
      (struct filter_instance *)malloc(sizeof(struct filter_instance));
 
-   inst->dirname = g_strdup_printf("%s/imagejfindXXXXXX", g_get_tmp_dir());
+   gchar *dirname = g_strdup_printf("%s/imagejfindXXXXXX", g_get_tmp_dir());
 
-   if (mkdtemp(inst->dirname) == NULL) {
+   if (mkdtemp(dirname) == NULL) {
      perror("Could not create temporary directory");
      exit(0);
    }
 
-   if (chdir(inst->dirname) < 0) {
+   if (chdir(dirname) < 0) {
      perror("Could not enter ImageJ directory");
      exit(0);
    }
+
+   g_free(dirname);
 
    // write ImageJ
    g_assert(g_file_set_contents(IMAGEJ_FILE,
@@ -330,8 +330,7 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
    g_spawn_async_with_pipes(NULL,
 			    ij_args,
 			    NULL, G_SPAWN_SEARCH_PATH,
-			    NULL, NULL,
-			    &inst->ij_pid,
+			    NULL, NULL, NULL,
 			    &to_fd,
 			    &from_fd,
 			    NULL,
@@ -378,24 +377,5 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
 
 int f_fini_imagej_exec (void *filter_args)
 {
-   struct filter_instance *inst = (struct filter_instance *)filter_args;
-
-   kill(inst->ij_pid, SIGKILL);
-   g_spawn_close_pid(inst->ij_pid);
-
-   fclose(inst->ij_to_file);
-   fclose(inst->ij_from_file);
-   free(inst->macro_name);
-
-   char *rm_args[] = { "rm", "-rf", inst->dirname, NULL };
-   g_assert(g_spawn_sync(NULL, rm_args, NULL,
-			 G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
-			 G_SPAWN_STDERR_TO_DEV_NULL,
-			 NULL, NULL, NULL, NULL, NULL, NULL));
-
-   g_free(inst->dirname);
-
-   free(inst);
-
    return 0;
 }

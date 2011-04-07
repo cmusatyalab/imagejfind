@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <glib.h>
+#include <archive.h>
 #include "quick_tar.h"
 
 #include <stdint.h>
@@ -39,7 +40,6 @@
 #include "ijloader-bin.h"
 #include "diamond_filter-bin.h"
 
-#define IMAGEJ_FILE "ImageJ.zip"
 #define DIAMOND_FILTER_FILE "diamond_filter.jar"
 #define IJLOADER_FILE "ijloader.jar"
 
@@ -257,6 +257,27 @@ static int start_x_server(void)
 }
 
 static
+void extract_zip(const void *data, size_t len)
+{
+   struct archive *arch = archive_read_new();
+   struct archive_entry *ent;
+   int ret;
+
+   g_assert(arch != NULL);
+   g_assert(!archive_read_support_format_zip(arch));
+   g_assert(!archive_read_open_memory(arch, (void *) data, len));
+   while (!(ret = archive_read_next_header(arch, &ent))) {
+     if (archive_read_extract(arch, ent, ARCHIVE_EXTRACT_SECURE_SYMLINKS |
+                              ARCHIVE_EXTRACT_SECURE_NODOTDOT)) {
+       fprintf(stderr, "%s\n", archive_error_string(arch));
+       abort();
+     }
+   }
+   g_assert(ret == ARCHIVE_EOF);
+   g_assert(!archive_read_finish(arch));
+}
+
+static
 int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
                         const void *blob_data, const char *filter_name,
                         void **filter_args)
@@ -280,18 +301,8 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
 
    g_free(dirname);
 
-   // write ImageJ
-   g_assert(g_file_set_contents(IMAGEJ_FILE,
-				(const gchar *) imagej_bin.data,
-				imagej_bin.len, NULL));
-
    // create imagej environment
-   char *spawn_args[] = { "unzip", IMAGEJ_FILE, NULL };
-   g_assert(g_spawn_sync(NULL, spawn_args, NULL,
-			 G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL |
-			 G_SPAWN_STDERR_TO_DEV_NULL,
-			 NULL, NULL, NULL, NULL, NULL, NULL));
-
+   extract_zip(imagej_bin.data, imagej_bin.len);
    g_assert(chdir("ImageJ") == 0);
 
    // write ijloader

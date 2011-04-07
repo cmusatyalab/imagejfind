@@ -11,8 +11,8 @@ quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
 	gcc $(CFLAGS) -o $@ -c quick-tar/quick_tar.c
 
 # filter code
-filter-code/fil_imagej_exec: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h quick-tar/quick_tar.o
-	gcc $(CFLAGS) -o $@ filter-code/fil_imagej_exec.c quick-tar/quick_tar.o $$(pkg-config opendiamond glib-2.0 --cflags --libs)
+filter-code/fil_imagej_exec: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h quick-tar/quick_tar.o PrintImageJVersion.class
+	gcc $(CFLAGS) -o $@ filter-code/fil_imagej_exec.c quick-tar/quick_tar.o $$(pkg-config opendiamond glib-2.0 --cflags --libs) -DIMAGEJ_VERSION=\"$(shell java PrintImageJVersion)\"
 
 # don't remove ij.jar dependency, the version string is inlined at compile time
 PrintImageJVersion.class: ij.jar

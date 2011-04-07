@@ -376,4 +376,16 @@ static int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    return int_result;
 }
 
-LF_MAIN(f_init_imagej_exec, f_eval_imagej_exec)
+int main(int argc, char **argv)
+{
+   if (argc == 2 && !strcmp(argv[1], "--version")) {
+     printf("ImageJ " IMAGEJ_VERSION "\n");
+     return 0;
+   } else if (argc == 2 && !strcmp(argv[1], "--filter")) {
+     lf_main(f_init_imagej_exec, f_eval_imagej_exec);
+     return 0;
+   } else {
+     printf("Usage: %s {--filter|--version}\n", argv[0]);
+     return 1;
+   }
+}

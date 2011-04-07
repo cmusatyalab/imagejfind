@@ -389,9 +389,7 @@ imagej_search::write_fspec(FILE *ostream)
 	fprintf(ostream, "\n");
 	fprintf(ostream, "THRESHOLD  %s\n", threshold);
 	fprintf(ostream, "MERIT  10000\n");
-	fprintf(ostream, "EVAL_FUNCTION  f_eval_imagej_exec  # eval function \n");
-	fprintf(ostream, "INIT_FUNCTION  f_init_imagej_exec  # init function \n");
-	fprintf(ostream, "FINI_FUNCTION  f_fini_imagej_exec  # fini function \n");
+	fprintf(ostream, "SIGNATURE @\n");
 
 	b64_tmp = g_base64_encode((const guchar *) eval_function, strlen(eval_function) + 1);
 	fprintf(ostream, "ARG  %s\n", b64_tmp);

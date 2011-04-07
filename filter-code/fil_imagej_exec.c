@@ -256,6 +256,7 @@ static int start_x_server(void)
   abort();
 }
 
+static
 int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
                         const void *blob_data, const char *filter_name,
                         void **filter_args)
@@ -354,7 +355,7 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
    return 0;
 }
 
-int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
+static int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
 
@@ -375,7 +376,4 @@ int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    return int_result;
 }
 
-int f_fini_imagej_exec (void *filter_args)
-{
-   return 0;
-}
+LF_MAIN(f_init_imagej_exec, f_eval_imagej_exec)

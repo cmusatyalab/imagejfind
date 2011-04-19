@@ -56,14 +56,14 @@ snapfind-plugin/imagej_search.so: snapfind-plugin/imagej_search.h snapfind-plugi
 
 # clean
 clean:
-	$(RM) -r filter-code/fil_imagej_exec.so filter-code/*-bin.h \
+	$(RM) -r filter-code/fil_imagej_exec filter-code/*-bin.h \
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
 		quick-tar/*.o snapfind-plugin/*.so *.class
 
 # install
 install: all snapfind-plugin/imagej.sf_conf
-	$(INSTALL) filter-code/*.so snapfind-plugin/*.so $(SNAPFIND_LIBDIR)
+	$(INSTALL) filter-code/fil_imagej_exec snapfind-plugin/*.so $(SNAPFIND_LIBDIR)
 	$(INSTALL) -m 644 snapfind-plugin/*.sf_conf $(SNAPFIND_LIBDIR)
 
 

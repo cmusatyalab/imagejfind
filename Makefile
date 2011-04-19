@@ -4,7 +4,7 @@ SNAPFIND_LIBDIR=/opt/snapfind/lib
 
 IJZIP := ij-latest.zip
 
-all: filter-code/fil_imagej_exec snapfind-plugin/imagej_search.so
+all: filter-code/fil_imagej_exec
 
 # quick tar
 quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
@@ -49,22 +49,16 @@ diamond_filter.jar: diamond_filter/src/Diamond_Filter.java ijloader.jar
 	jar cf $@ -C diamond_filter/bin/ .
 
 
-# snapfind plugin
-snapfind-plugin/imagej_search.so: snapfind-plugin/imagej_search.h snapfind-plugin/imagej_search.cc quick-tar/quick_tar.o PrintImageJVersion.class
-	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/imagej_search.cc $$(pkg-config --cflags opendiamond) $$(pkg-config --cflags --libs gtk+-2.0) quick-tar/quick_tar.o -DIMAGEJ_VERSION=\"$(shell java PrintImageJVersion)\"
-
-
 # clean
 clean:
 	$(RM) -r filter-code/fil_imagej_exec filter-code/*-bin.h \
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
-		quick-tar/*.o snapfind-plugin/*.so *.class
+		quick-tar/*.o *.class
 
 # install
-install: all snapfind-plugin/imagej.sf_conf
-	$(INSTALL) filter-code/fil_imagej_exec snapfind-plugin/*.so $(SNAPFIND_LIBDIR)
-	$(INSTALL) -m 644 snapfind-plugin/*.sf_conf $(SNAPFIND_LIBDIR)
+install: all
+	$(INSTALL) filter-code/fil_imagej_exec $(SNAPFIND_LIBDIR)
 
 
 .DUMMY: all clean install

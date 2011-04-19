@@ -1,2 +1,0 @@
-GUI_LIB		./imagej_search.so
-SEARCHLET_LIB	./fil_imagej_exec

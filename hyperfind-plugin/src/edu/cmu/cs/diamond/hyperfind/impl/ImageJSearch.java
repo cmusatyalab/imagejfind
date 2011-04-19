@@ -43,7 +43,6 @@ package edu.cmu.cs.diamond.hyperfind.impl;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +51,8 @@ import java.util.List;
 import java.util.Map;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import edu.cmu.cs.diamond.hyperfind.BoundingBox;
 import edu.cmu.cs.diamond.hyperfind.HyperFindSearch;
@@ -90,11 +91,13 @@ public class ImageJSearch extends HyperFindSearch {
 
     public static byte[] createBlob(Map<String, byte[]> files) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
+        ZipOutputStream zos = new ZipOutputStream(baos);
         try {
             for (Map.Entry<String, byte[]> entry: files.entrySet()) {
-                Util.quickTar1(dos, entry.getValue(), entry.getKey());
+                zos.putNextEntry(new ZipEntry(entry.getKey()));
+                zos.write(entry.getValue(), 0, entry.getValue().length);
             }
+            zos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

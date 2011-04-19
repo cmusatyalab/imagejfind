@@ -31,7 +31,6 @@
 #include <assert.h>
 #include <glib.h>
 #include <archive.h>
-#include "quick_tar.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -318,11 +317,13 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
 
    // write user blob
    g_assert(mkdir("Diamond", 0700) == 0);
-   g_assert(untar_blob("Diamond", bloblen, (char *)blob_data) == 0);
+   g_assert(chdir("Diamond") == 0);
+   extract_zip(blob_data, bloblen);
 
    // write it again to the macros directory
+   g_assert(chdir("../../macros") == 0);
+   extract_zip(blob_data, bloblen);
    g_assert(chdir("..") == 0);
-   g_assert(untar_blob("macros", bloblen, (char *)blob_data) == 0);
 
    // start X server?!
    int display = start_x_server();

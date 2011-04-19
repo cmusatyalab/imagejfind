@@ -1,18 +1,14 @@
 INSTALL := install
-CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra -Iquick-tar
+CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra
 SNAPFIND_LIBDIR=/opt/snapfind/lib
 
 IJZIP := ij-latest.zip
 
 all: filter-code/fil_imagej_exec
 
-# quick tar
-quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
-	gcc $(CFLAGS) -o $@ -c quick-tar/quick_tar.c
-
 # filter code
-filter-code/fil_imagej_exec: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h quick-tar/quick_tar.o PrintImageJVersion.class
-	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc $(CFLAGS) -o $@ filter-code/fil_imagej_exec.c quick-tar/quick_tar.o $$(pkg-config opendiamond glib-2.0 --cflags --libs) -I/opt/diamond-filter-kit/include -L/opt/diamond-filter-kit/lib $$(pkg-config libarchive --cflags --libs --static) -DIMAGEJ_VERSION=\"$(shell java PrintImageJVersion)\"
+filter-code/fil_imagej_exec: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h PrintImageJVersion.class
+	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc $(CFLAGS) -o $@ filter-code/fil_imagej_exec.c $$(pkg-config opendiamond glib-2.0 --cflags --libs) -I/opt/diamond-filter-kit/include -L/opt/diamond-filter-kit/lib $$(pkg-config libarchive --cflags --libs --static) -DIMAGEJ_VERSION=\"$(shell java PrintImageJVersion)\"
 
 # don't remove ij.jar dependency, the version string is inlined at compile time
 PrintImageJVersion.class: ij.jar
@@ -54,7 +50,7 @@ clean:
 	$(RM) -r filter-code/fil_imagej_exec filter-code/*-bin.h \
 		filter-code/encapsulate *.jar \
 		diamond_filter/bin ijloader/bin \
-		quick-tar/*.o *.class
+		*.class
 
 # install
 install: all

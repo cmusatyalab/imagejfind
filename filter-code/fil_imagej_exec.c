@@ -367,7 +367,7 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
    return 0;
 }
 
-static int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
+static double f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
 
@@ -380,12 +380,8 @@ static int f_eval_imagej_exec (lf_obj_handle_t ohandle, void *filter_args)
    fflush(stdout);
 
    double result = process_attrs_and_get_result(inst->ij_from_file, ohandle);
-   lf_write_attr(ohandle, "_imagej_result.double", sizeof(double), (unsigned char *)&result);
-
-   int int_result = (int) result;
-   printf("int_result: %d\n", int_result);
-
-   return int_result;
+   printf("result: %g\n", result);
+   return result;
 }
 
 int main(int argc, char **argv)
@@ -394,7 +390,7 @@ int main(int argc, char **argv)
      printf("ImageJ " IMAGEJ_VERSION "\n");
      return 0;
    } else if (argc == 2 && !strcmp(argv[1], "--filter")) {
-     lf_main(f_init_imagej_exec, f_eval_imagej_exec);
+     lf_main_double(f_init_imagej_exec, f_eval_imagej_exec);
      return 0;
    } else {
      printf("Usage: %s {--filter|--version}\n", argv[0]);

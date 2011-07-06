@@ -79,7 +79,7 @@ public class ImageJSearch extends HyperFindSearch {
                 blob);
 
         this.settings = new SearchSettingsFrame(searchName, "filter", true,
-                1, true);
+                1, Double.POSITIVE_INFINITY, true);
         final ImageJSearch search = this;
         settings.addChangeListener(new ChangeListener() {
             @Override
@@ -170,8 +170,8 @@ public class ImageJSearch extends HyperFindSearch {
         dependencies.add("RGB");
         List<String> args = new ArrayList<String>();
         args.add(Util.base64EncodeWithNull(macroName.getBytes()));
-        Filter f = new Filter(getDigestedName(), c, settings.getThreshold(),
-                dependencies, args, blob);
+        Filter f = new Filter(getDigestedName(), c, settings.getMinScore(),
+                settings.getMaxScore(), dependencies, args, blob);
 
         List<Filter> filters = new ArrayList<Filter>();
         filters.add(f);

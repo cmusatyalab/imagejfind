@@ -45,7 +45,7 @@
 struct filter_instance {
    FILE *ij_to_file;
    FILE *ij_from_file;
-   char *macro_name;
+   const char *macro_name;
 };
 
 static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
@@ -62,7 +62,7 @@ static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
    fwrite(obj_data, data_len, 1, fp);
 }
 
-static void transmit_macro(int macro_len, char *macro, FILE *fp)
+static void transmit_macro(int macro_len, const char *macro, FILE *fp)
 {
    int net_macro_len = htonl(macro_len);
 
@@ -357,11 +357,7 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
    inst->ij_to_file = fdopen(to_fd, "w");
    inst->ij_from_file = fdopen(from_fd, "r");
 
-   gsize len;
-   char *tmp = (char *) g_base64_decode(args[0], &len);
-   g_assert(tmp[len-1] == '\0');
-   inst->macro_name = strdup(tmp);
-   g_free(tmp);
+   inst->macro_name = args[0];
    *filter_args = inst;
 
    return 0;

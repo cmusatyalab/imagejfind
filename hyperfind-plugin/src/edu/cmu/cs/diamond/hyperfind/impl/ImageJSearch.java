@@ -169,7 +169,7 @@ public class ImageJSearch extends HyperFindSearch {
         List<String> dependencies = new ArrayList<String>();
         dependencies.add("RGB");
         List<String> args = new ArrayList<String>();
-        args.add(Util.base64EncodeWithNull(macroName.getBytes()));
+        args.add(macroName);
         Filter f = new Filter(getDigestedName(), c, settings.getMinScore(),
                 settings.getMaxScore(), dependencies, args, blob);
 

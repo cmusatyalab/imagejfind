@@ -51,8 +51,6 @@ import java.util.List;
 import java.util.Map;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import edu.cmu.cs.diamond.hyperfind.BoundingBox;
 import edu.cmu.cs.diamond.hyperfind.HyperFindSearch;
@@ -90,22 +88,12 @@ public class ImageJSearch extends HyperFindSearch {
     }
 
     public static byte[] createBlob(Map<String, byte[]> files) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ZipOutputStream zos = new ZipOutputStream(baos);
         try {
-            for (Map.Entry<String, byte[]> entry: files.entrySet()) {
-                ZipEntry ze = new ZipEntry(entry.getKey());
-                // storing different timestamps on every run would defeat
-                // server-side result caching
-                ze.setTime(0);
-                zos.putNextEntry(ze);
-                zos.write(entry.getValue(), 0, entry.getValue().length);
-            }
-            zos.close();
+            return Util.encodeZipFile(files);
         } catch (IOException e) {
             e.printStackTrace();
+            return new byte[0];
         }
-        return baos.toByteArray();
     }
 
     @Override

@@ -46,7 +46,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.swing.event.ChangeEvent;
@@ -130,13 +129,6 @@ public class ImageJSearch extends HyperFindSearch {
     @Override
     public boolean needsPatches() {
         return false;
-    }
-
-    @Override
-    public List<BoundingBox> runLocally(BufferedImage image)
-            throws IOException, InterruptedException {
-        List<BoundingBox> empty = Collections.emptyList();
-        return empty;
     }
 
     @Override

@@ -5,8 +5,6 @@
 *.jar
 *.zip
 
-bin/
-
 /filter-code/*-bin.h
 /filter-code/encapsulate
 /filter-code/fil_imagej_exec

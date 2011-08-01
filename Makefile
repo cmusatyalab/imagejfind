@@ -1,6 +1,6 @@
 INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra
-SNAPFIND_LIBDIR=/opt/snapfind/lib
+FILTER_DIR=/usr/share/diamond/filters
 
 IJZIP := ij-latest.zip
 
@@ -54,7 +54,7 @@ clean:
 
 # install
 install: all
-	$(INSTALL) filter-code/fil_imagej_exec $(SNAPFIND_LIBDIR)
+	$(INSTALL) filter-code/fil_imagej_exec $(FILTER_DIR)
 
 
 .DUMMY: all clean install

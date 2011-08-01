@@ -1,6 +1,7 @@
 INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra
 FILTER_DIR=/usr/share/diamond/filters
+BINDIR=/usr/bin
 
 IJZIP := ij-latest.zip
 
@@ -55,6 +56,7 @@ clean:
 # install
 install: all
 	$(INSTALL) filter-code/fil_imagej_exec $(FILTER_DIR)
+	$(INSTALL) diamond-bundle-imagej $(BINDIR)
 
 
 .DUMMY: all clean install

@@ -18,13 +18,13 @@ from optparse import OptionParser
 if __name__ == '__main__':
     parser = OptionParser(
         usage='%prog [-h] [options] macro-file [supporting-files...]',
-        description='Package a Diamond filter written in ImageJ into an OpenDiamond search bundle.',
+        description='Package an ImageJ macro into an OpenDiamond predicate.',
     )
     parser.add_option('-o', dest='outfile', metavar='outfile',
             help='path to output file')
     parser.add_option('-n', dest='name', metavar='display-name',
-            default='ImageJ Search',
-            help='display name for search')
+            default='ImageJ Predicate',
+            help='display name for predicate')
     opts, args = parser.parse_args()
     if len(args) < 1:
         parser.error('no macro file specified')
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     macro = os.path.basename(macro_file)
     outfile = opts.outfile
     if outfile is None:
-        outfile = os.path.splitext(macro_file)[0] + '.search'
+        outfile = os.path.splitext(macro_file)[0] + '.pred'
 
     try:
         bundle_macro(outfile, opts.name, 'fil_imagej_exec', [macro], args)

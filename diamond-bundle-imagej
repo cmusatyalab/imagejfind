@@ -32,7 +32,7 @@ if __name__ == '__main__':
     macro = os.path.basename(macro_file)
     outfile = opts.outfile
     if outfile is None:
-        outfile = os.path.splitext(macro_file)[0] + '.pred'
+        outfile = os.path.splitext(os.path.basename(macro_file))[0] + '.pred'
 
     try:
         bundle_macro(outfile, opts.name, 'fil_imagej_exec', [macro], args)

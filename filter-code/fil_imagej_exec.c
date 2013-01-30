@@ -209,9 +209,9 @@ static int start_x_server(void)
     printf("Trying DISPLAY :%d\n", i);
 
     char *display_str = g_strdup_printf(":%d", i);
-    char *args[] = { "/usr/bin/Xvfb", display_str, "-terminate", NULL };
+    char *args[] = { "Xvfb", display_str, "-terminate", NULL };
     g_spawn_async(NULL, args, NULL,
-		  G_SPAWN_DO_NOT_REAP_CHILD,
+		  G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,
 		  ignore_sigusr1, NULL, NULL, NULL);
     g_free(display_str);
 

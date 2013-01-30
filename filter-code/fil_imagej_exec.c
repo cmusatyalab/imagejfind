@@ -135,7 +135,7 @@ static pthread_mutex_t signal_pipe_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // used in the child of the fork to ignore sigusr1 so that the xserver
 // will send us sigusr1 when it is ready (per xinit.c)
-static void ignore_sigusr1(gpointer user_data)
+static void ignore_sigusr1(gpointer user_data G_GNUC_UNUSED)
 {
   struct sigaction action;
   memset(&action, 0, sizeof action);
@@ -144,7 +144,7 @@ static void ignore_sigusr1(gpointer user_data)
   sigaction(SIGUSR1, &action, NULL);
 }
 
-static void sigchld(int sig)
+static void sigchld(int sig G_GNUC_UNUSED)
 {
   pthread_mutex_lock(&signal_pipe_mutex);
   int fd = signal_pipe;
@@ -164,7 +164,7 @@ static void sigchld(int sig)
   wait(&status);
 }
 
-static void sigusr1(int sig)
+static void sigusr1(int sig G_GNUC_UNUSED)
 {
   pthread_mutex_lock(&signal_pipe_mutex);
   int fd = signal_pipe;

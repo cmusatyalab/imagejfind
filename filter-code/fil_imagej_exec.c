@@ -55,7 +55,7 @@ static void transmit_image(lf_obj_handle_t ohandle, FILE *fp)
 
    lf_ref_attr(ohandle, "", &data_len, &obj_data);
 
-   printf("Sending %d byte image...\n", data_len);
+   printf("Sending %zd byte image...\n", data_len);
    int net_img_size = htonl(data_len);
 
    fwrite(&net_img_size, sizeof(net_img_size), 1, fp);

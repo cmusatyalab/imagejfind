@@ -1,5 +1,5 @@
 INSTALL := install
-CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra
+CFLAGS := -fPIC -O2 -g -Wall -Wextra
 FILTER_DIR=/usr/share/diamond/filters
 BINDIR=/usr/bin
 

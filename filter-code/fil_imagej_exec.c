@@ -283,6 +283,8 @@ int f_init_imagej_exec (int num_arg, const char * const *args, int bloblen,
 {
    g_assert(num_arg == 1);
 
+   printf("Launching ImageJ " IMAGEJ_VERSION "\n");
+
    struct filter_instance *inst =
      (struct filter_instance *)malloc(sizeof(struct filter_instance));
 

@@ -1,7 +1,7 @@
 INSTALL := install
 CFLAGS := -fPIC -O2 -g -Wall -Wextra
-FILTER_DIR=/usr/share/diamond/filters
-BINDIR=/usr/bin
+FILTER_DIR=/usr/local/share/diamond/filters
+BINDIR=/usr/local/bin
 
 IJZIP := ij-latest.zip
 

@@ -9,7 +9,7 @@ all: filter-code/fil_imagej_exec
 
 # filter code
 filter-code/fil_imagej_exec: filter-code/fil_imagej_exec.c filter-code/imagej-bin.h filter-code/ijloader-bin.h filter-code/diamond_filter-bin.h PrintImageJVersion.class
-	export PKG_CONFIG_PATH=/opt/diamond-filter-kit/lib/pkgconfig:$$PKG_CONFIG_PATH; gcc $(CFLAGS) -o $@ filter-code/fil_imagej_exec.c $$(pkg-config opendiamond glib-2.0 --cflags --libs) -I/opt/diamond-filter-kit/include -L/opt/diamond-filter-kit/lib $$(pkg-config libarchive --cflags --libs --static) -DIMAGEJ_VERSION=\"$(shell java PrintImageJVersion)\"
+	gcc $(CFLAGS) -o $@ filter-code/fil_imagej_exec.c $$(pkg-config opendiamond glib-2.0 --cflags --libs) $$(pkg-config libarchive --cflags --libs) -DIMAGEJ_VERSION=\"$(shell java PrintImageJVersion)\"
 
 # don't remove ij.jar dependency, the version string is inlined at compile time
 PrintImageJVersion.class: ij.jar
